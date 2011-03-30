@@ -26,15 +26,16 @@ namespace DualSnakeServer
         {
             if (Game == null || Game.Status == GameStatus.GameOver)
             {
-                if (Game != null) { Game.AbortAll(null, null); }
+                if (Game != null) { Game.AbortGame(); }
                 Game = new SnakeGame(e.Client);
+                Game.MessageLogged += new SnakeGame.LogMessageDelegate(delegate(object o, SnakeGame.LogEventArgs ea) { Console.WriteLine(ea.Message); });
                 return;
             }
             else
             {
                 if (Game.Status == GameStatus.WaitingForOpponent)
                 {
-                    Game.Start(e.Client);
+                    Game.AddSecondPlayer(e.Client);
                 }
                 else
                 {

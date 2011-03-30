@@ -371,9 +371,14 @@ namespace DualSnakeServer
                 }
             }
 
-            if (e.Text == "#Turbo")
+            if (e.Text == "#Turbo on")
             {
-                this.TurboEnabled = !this.TurboEnabled;
+                if (this.Turbo > 0) { this.TurboEnabled = true; }
+            }
+
+            if (e.Text == "#Turbo off")
+            {
+                this.TurboEnabled = false;
             }
 
             if (e.Text == "#MaxTurbo")

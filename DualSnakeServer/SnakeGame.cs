@@ -372,10 +372,10 @@ namespace DualSnakeServer
             {
                 switch (e.Text.Substring(3))
                 {
-                    case "up": this.NextDirection = Direction.Up; return;
-                    case "down": this.NextDirection = Direction.Down; return;
-                    case "left": this.NextDirection = Direction.Left; return;
-                    case "right": this.NextDirection = Direction.Right; return;
+                    case "U": this.NextDirection = Direction.Up; return;
+                    case "D": this.NextDirection = Direction.Down; return;
+                    case "L": this.NextDirection = Direction.Left; return;
+                    case "R": this.NextDirection = Direction.Right; return;
                 }
             }
 

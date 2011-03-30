@@ -155,16 +155,16 @@ namespace DualSnake
                 switch (e.KeyCode)
                 {
                     case Keys.Up:
-                        Server.Send("#D up");
+                        Server.Send("#D U");
                         break;
                     case Keys.Down:
-                        Server.Send("#D down");
+                        Server.Send("#D D");
                         break;
                     case Keys.Left:
-                        Server.Send("#D left");
+                        Server.Send("#D L");
                         break;
                     case Keys.Right:
-                        Server.Send("#D right");
+                        Server.Send("#D R");
                         break;
                     case Keys.Space:
                         Server.Send("#Turbo on");

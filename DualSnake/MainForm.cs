@@ -28,26 +28,21 @@ namespace DualSnake
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Server = new Client();
             Server.Connect("10.111.111.221", 1991);
-            Server.Closed += new Client.CloseDelegate(delegate
-            {
-                
-            });
             Server.Connected += new Client.ConnectDelegate(delegate
             {
-                Server.Send("NAME valaki");
                 Server.Received += new Client.ReceiveDelegate(Server_Received);
             });
         }
 
         void Server_Received(object sender, Client.TransmitEventArgs e)
         {
-            if (e.Text.StartsWith("STATUS "))
+            if (e.Text.StartsWith("#Status "))
             {
-                string[] pqq = e.Text.Substring(7).Split('\t');
+                string[] pqq = e.Text.Substring(8).Split('\t');
                 string fud = pqq[0];
-                string s1 = pqq[1];
-                string s2 = pqq[2];
-                string t = pqq[3];
+                string t = pqq[1];
+                string s1 = pqq[2];
+                string s2 = pqq[3];
                 TurboEnabled = pqq[4] == "E";
                 TurboCounter = int.Parse(pqq[5]);
 
@@ -129,19 +124,19 @@ namespace DualSnake
             switch (e.KeyCode)
             {
                 case Keys.Up:
-                    Server.Send("DIRECTION UP");
+                    Server.Send("#D up");
                     break;
                 case Keys.Down:
-                    Server.Send("DIRECTION DOWN");
+                    Server.Send("#D down");
                     break;
                 case Keys.Left:
-                    Server.Send("DIRECTION LEFT");
+                    Server.Send("#D left");
                     break;
                 case Keys.Right:
-                    Server.Send("DIRECTION RIGHT");
+                    Server.Send("#D right");
                     break;
                 case Keys.Space:
-                    Server.Send("TURBO");
+                    Server.Send("#Turbo");
                     break;
             }
         }

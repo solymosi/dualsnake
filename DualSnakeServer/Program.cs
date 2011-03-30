@@ -28,6 +28,7 @@ namespace DualSnakeServer
             {
                 if (Game != null) { Game.AbortGame(); }
                 Game = new SnakeGame(e.Client);
+                Game.MessageLogged += new SnakeGame.LogMessageDelegate(delegate(object o, SnakeGame.LogEventArgs ea) { Console.WriteLine(ea.Message); });
                 return;
             }
             else

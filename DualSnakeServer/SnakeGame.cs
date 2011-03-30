@@ -9,10 +9,12 @@ namespace DualSnakeServer
 {
     public class SnakeGame
     {
-        public const int StartLength = 5;
+        public const int StartLength = 8;
         public const int ClockInterval = 80;
         public const int CountdownDuration = 3;
         public const int TurboAmount = 20;
+        public const int InitialFood = 2;
+        public const int InitialTurbo = 2;
         public const int BlockWidth = 50;
         public const int BlockHeight = 50;
 
@@ -53,14 +55,14 @@ namespace DualSnakeServer
         public SnakeGame(SnakePlayer FirstPlayer)
         {
             AddPlayer(FirstPlayer);
-            Players.First().Send("#FIRST");
+            Players.First().Send("#First");
             MessageLogged(this, new LogEventArgs("First player connected"));
         }
 
         public void AddSecondPlayer(SnakePlayer SecondPlayer)
         {
             AddPlayer(SecondPlayer);
-            Players.Last().Send("#SECOND");
+            Players.Last().Send("#Second");
             MessageLogged(this, new LogEventArgs("Second player connected"));
             StartGame();
         }
@@ -80,7 +82,8 @@ namespace DualSnakeServer
             {
                 CountDown.Stop();
                 CreateSnakes();
-                PlaceFood();
+                for (int i = 0; i < InitialFood; i++) { PlaceFood(); }
+                for (int i = 0; i < InitialTurbo; i++) { PlaceTurbo(); }
                 Clock.Interval = ClockInterval;
                 Clock.Elapsed += new ElapsedEventHandler(Clock_Elapsed);
                 Clock.Start();
@@ -92,12 +95,10 @@ namespace DualSnakeServer
 
         public void CreateSnakes()
         {
-            foreach (SnakePlayer P in Players)
+            for (int i = 1; i <= StartLength; i++)
             {
-                for (int i = 1; i <= StartLength; i++)
-                {
-                    P.Snake.Add(new Point(BlockHeight / 2, i + 2));
-                }
+                Players.First().Snake.Add(new Point(BlockHeight / 2, i + 2));
+                Players.Last().Snake.Add(new Point(BlockHeight / 2, BlockWidth - i - 1));
             }
             Players.First().CurrentDirection = Direction.Right;
             Players.Last().CurrentDirection = Direction.Left;
@@ -131,14 +132,14 @@ namespace DualSnakeServer
                     AteFood(Players.First().Head);
                     MessageLogged(this, new LogEventArgs("Player 1 ate a food"));
                 }
-                else { Players.First().Snake.RemoveAt(0); }
+                else { if (!TurboRound || Players.First().TurboEnabled) { Players.First().Snake.RemoveAt(0); } }
                 if (AtFood[1])
                 {
                     Players.First().Snake.RemoveAt(0);
                     AteFood(Players.Last().Head);
                     MessageLogged(this, new LogEventArgs("Player 2 ate a food"));
                 }
-                else { Players.Last().Snake.RemoveAt(0); }
+                else { if (!TurboRound || Players.Last().TurboEnabled) { Players.Last().Snake.RemoveAt(0); } }
                 if (Players.First().Snake.Count < 1) { Fail[0] = true; }
                 if (Players.Last().Snake.Count < 1) { Fail[1] = true; }
             }
@@ -155,13 +156,13 @@ namespace DualSnakeServer
                 if (AtTurbo[0])
                 {
                     Players.First().Turbo += TurboAmount;
-                    AteFood(Players.First().Head);
+                    AteTurbo(Players.First().Head);
                     MessageLogged(this, new LogEventArgs("Player 1 ate a turbo"));
                 }
                 if (AtTurbo[1])
                 {
                     Players.Last().Turbo += TurboAmount;
-                    AteFood(Players.Last().Head);
+                    AteTurbo(Players.Last().Head);
                     MessageLogged(this, new LogEventArgs("Player 2 ate a turbo"));
                 }
             }
@@ -171,7 +172,7 @@ namespace DualSnakeServer
                 if (P.TurboEnabled)
                 {
                     P.Turbo--;
-                    if (P.Turbo == 0) { P.TurboEnabled = false; }
+                    if (P.Turbo <= 0) { P.Turbo = 0; P.TurboEnabled = false; }
                 }
             }
 
@@ -278,6 +279,7 @@ namespace DualSnakeServer
                 Send("#Winner " + Won.ToString());
                 MessageLogged(this, new LogEventArgs("Game over: Player " + Won.ToString() + " won"));
             }
+            AbortGame();
         }
 
         public void AbortGame() { AbortGame(null, null); }
@@ -320,6 +322,8 @@ namespace DualSnakeServer
                 Y = Tools.Random.Next(2, BlockHeight);
                 if (Food.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Turbo.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
+                if (Players.First().Snake.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
+                if (Players.Last().Snake.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 return new Point(X, Y);
             } while (true);
         }

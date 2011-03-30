@@ -15,7 +15,6 @@ namespace DualSnake
         private List<Point> SnakeTwo = new List<Point>();
         private List<Point> Food = new List<Point>();
         private List<Point> Turbo = new List<Point>();
-        private Timer UpdateTimer = new Timer();
         int TurboCounter = 0;
         bool TurboEnabled = false;
         bool GameOver = false;
@@ -30,22 +29,31 @@ namespace DualSnake
         {
             this.ClientSize = new Size(500, 535);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
-            UpdateTimer.Interval = 5;
-            UpdateTimer.Tick += new EventHandler(delegate { this.Invoke((MethodInvoker)delegate { this.Refresh(); }); });
-            UpdateTimer.Start();
-
+ 
             Server = new Client();
-            Status = "Connecting to server...";
+            SetStatus("Connecting to server...");
             Server.Connect("10.111.111.221", 1991);
+            Server.Received += new Client.ReceiveDelegate(Server_Received);
             Server.Connected += new Client.ConnectDelegate(delegate
             {
-                Status = "Connected to server. Waiting for an opponent to join...";
-                Server.Received += new Client.ReceiveDelegate(Server_Received);
+                SetStatus("Connected to server. Waiting for an opponent to join...");
             });
             Server.Closed += new Client.CloseDelegate(delegate(object o, Client.CloseEventArgs ea)
             {
-                if (ea.Type == Client.CloseType.Dropped && !GameOver) { Status = "The server has dropped the connection :("; }
+                if (ea.Type == Client.CloseType.Dropped && !GameOver) { SetStatus("The server has dropped the connection :("); }
             });
+        }
+
+        private void SetStatus(string Message)
+        {
+            Status = Message;
+            RePaint();
+        }
+
+        private void RePaint()
+        {
+            if (this.InvokeRequired) { this.Invoke((MethodInvoker)delegate { this.RePaint(); }); return; }
+            this.Refresh();
         }
 
         void Server_Received(object sender, Client.TransmitEventArgs e)
@@ -53,71 +61,74 @@ namespace DualSnake
             if (e.Text == "#First")
             {
                 Me = 1;
-                Status = "Connected to server. Waiting for an opponent to join...";
+                SetStatus("Connected to server. Waiting for an opponent to join...");
             }
 
             if (e.Text == "#Second")
             {
                 Me = 2;
-                Status = "Connected to server. Game will start now...";
+                SetStatus("Connected to server. Game will start now...");
             }
 
             if (e.Text.StartsWith("#Countdown "))
             {
-                Status = "The game will start in " + e.Text.Substring(11) + " seconds...";
+                SetStatus("The game will start in " + e.Text.Substring(11) + " seconds...");
             }
 
             if (e.Text == "#Draw")
             {
                 GameOver = true;
-                Status = "Game over! It's a DRAW! :S";
+                SetStatus("Game over! It's a DRAW! :S");
             }
 
             if (e.Text.StartsWith("#Winner "))
             {
                 GameOver = true;
-                Status = "Game over! You " + (int.Parse(e.Text.Substring(8)) == Me ? "WON :)" : "LOST :(");
+                SetStatus("Game over! You " + (int.Parse(e.Text.Substring(8)) == Me ? "WON :)" : "LOST :("));
             }
 
             if (e.Text.StartsWith("#Status "))
             {
-                string[] pqq = e.Text.Substring(8).Split('\t');
-                string fud = pqq[0];
-                string t = pqq[1];
-                string s1 = pqq[2];
-                string s2 = pqq[3];
-                TurboEnabled = pqq[4] == "E";
-                TurboCounter = int.Parse(pqq[5]);
-                Food.Clear();
-                string[] Foods = fud.Split(new string[] { ";" }, StringSplitOptions.None);
-                foreach (string FD in Foods)
+                lock (this)
                 {
-                    string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
-                    Food.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
+                    string[] pqq = e.Text.Substring(8).Split('\t');
+                    string fud = pqq[0];
+                    string t = pqq[1];
+                    string s1 = pqq[2];
+                    string s2 = pqq[3];
+                    TurboEnabled = pqq[4] == "E";
+                    TurboCounter = int.Parse(pqq[5]);
+                    Food.Clear();
+                    string[] Foods = fud.Split(new string[] { ";" }, StringSplitOptions.None);
+                    foreach (string FD in Foods)
+                    {
+                        string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
+                        Food.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
+                    }
+                    Turbo.Clear();
+                    string[] Turbos = t.Split(new string[] { ";" }, StringSplitOptions.None);
+                    foreach (string FD in Turbos)
+                    {
+                        string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
+                        Turbo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
+                    }
+                    SnakeOne.Clear();
+                    string[] Points = s1.Split(new string[] { ";" }, StringSplitOptions.None);
+                    foreach (string P in Points)
+                    {
+                        string[] Parts = P.Split(new string[] { "," }, StringSplitOptions.None);
+                        SnakeOne.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
+                    }
+                    SnakeTwo.Clear();
+                    string[] pts = s2.Split(new string[] { ";" }, StringSplitOptions.None);
+                    foreach (string Q in pts)
+                    {
+                        string[] Parts = Q.Split(new string[] { "," }, StringSplitOptions.None);
+                        SnakeTwo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
+                    }
                 }
-                Turbo.Clear();
-                string[] Turbos = t.Split(new string[] { ";" }, StringSplitOptions.None);
-                foreach (string FD in Turbos)
-                {
-                    string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
-                    Turbo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                }
-                SnakeOne.Clear();
-                string[] Points = s1.Split(new string[] { ";" }, StringSplitOptions.None);
-                foreach (string P in Points)
-                {
-                    string[] Parts = P.Split(new string[] { "," }, StringSplitOptions.None);
-                    SnakeOne.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                }
-                SnakeTwo.Clear();
-                string[] pts = s2.Split(new string[] { ";" }, StringSplitOptions.None);
-                foreach (string Q in pts)
-                {
-                    string[] Parts = Q.Split(new string[] { "," }, StringSplitOptions.None);
-                    SnakeTwo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                }
-                this.Status = "TURBO: " + TurboCounter.ToString() + "     Press and hold SPACE to activate";
-                this.Invoke((MethodInvoker)delegate { this.Refresh(); });
+                SetStatus("TURBO: " + TurboCounter.ToString() + "     Press and hold SPACE to activate");
+                RePaint();
             }
         }
 
@@ -194,7 +205,6 @@ namespace DualSnake
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            UpdateTimer.Stop();
             Server.Abort();
         }
     }

@@ -8,41 +8,50 @@ namespace DualSnakeServer
     class Program
     {
         static public Server<SnakePlayer> Server = new Server<SnakePlayer>(1991);
-        static public SnakeGame Game;
+        static public List<SnakeGame> Games = new List<SnakeGame>();
+        static public int CurrentID = 0;
 
         static void Main(string[] args)
         {
             Server<SnakePlayer> Server = new Server<SnakePlayer>(1991);
             Server.Connected += new Server<SnakePlayer>.ConnectedDelegate(Server_Connected);
             Server.Listen();
-            Console.WriteLine("DualSnake Server running :)\r\nPress CTRL+C to exit.");
-            while (true)
-            {
-                System.Threading.Thread.Sleep(1000);
-            }
+            Console.WriteLine("DualSnake Server v1.0\r\nCopyright (C) Solymosi Máté 2011\r\nPress CTRL+C to exit...");
+            while (true) { System.Threading.Thread.Sleep(10000); }
         }
 
         static void Server_Connected(object sender, Server<SnakePlayer>.ConnectionEventArgs e)
         {
-            if (Game == null || Game.Status == GameStatus.GameOver)
+            SnakeGame TargetGame = null;
+            foreach (SnakeGame G in Games)
             {
-                if (Game != null) { Game.AbortGame(); }
-                Game = new SnakeGame(e.Client);
-                Console.WriteLine("First player connected");
-                Game.MessageLogged += new SnakeGame.LogMessageDelegate(delegate(object o, SnakeGame.LogEventArgs ea) { Console.WriteLine(ea.Message); });
-                return;
+                if (G.Status == GameStatus.WaitingForOpponent) { TargetGame = G; break; }
+            }
+            if (TargetGame == null)
+            {
+                CurrentID++;
+                TargetGame = new SnakeGame(e.Client);
+                TargetGame.ID = CurrentID;
+                TargetGame.GameOver += new SnakeGame.GameOverDelegate(TargetGame_GameOver);
+                TargetGame.MessageLogged += new SnakeGame.LogMessageDelegate(TargetGame_MessageLogged);
+                Games.Add(TargetGame);
+                TargetGame_MessageLogged(TargetGame, new SnakeGame.LogEventArgs("First player connected"));
             }
             else
             {
-                if (Game.Status == GameStatus.WaitingForOpponent)
-                {
-                    Game.AddSecondPlayer(e.Client);
-                }
-                else
-                {
-                    e.Client.Abort();
-                }
+                TargetGame.AddSecondPlayer(e.Client);
             }
+        }
+
+        static void TargetGame_MessageLogged(object sender, SnakeGame.LogEventArgs e)
+        {
+            SnakeGame G = (SnakeGame)sender;
+            Console.WriteLine("#" + G.ID + ": " + e.Message);
+        }
+
+        static void TargetGame_GameOver(object sender, EventArgs e)
+        {
+            Games.Remove((SnakeGame)sender);
         }
     }
 }

@@ -9,469 +9,344 @@ namespace DualSnakeServer
 {
     public class SnakeGame
     {
-        public int Speed = 1;
-        public int StartLength = 5;
-        public int FoodEaten = 0;
-        public int CurrentInterval = 80;
+        public const int StartLength = 5;
+        public const int ClockInterval = 80;
+        public const int CountdownDuration = 3;
+        public const int TurboAmount = 20;
+        public const int BlockWidth = 50;
+        public const int BlockHeight = 50;
+
         public List<Point> Food = new List<Point>();
         public List<Point> Turbo = new List<Point>();
-        public SnakePlayer PlayerOne;
-        public SnakePlayer PlayerTwo;
-        public Timer Clock = new Timer();
-        public Timer CountDown = new Timer();
-        public int BlockWidth = 50;
-        public int BlockHeight = 50;
-        public bool TurboOnly = false;
-        public SnakePlayer Winner = null;
+
+        public List<SnakePlayer> Players = new List<SnakePlayer>(2);
+
+        protected Timer Clock = new Timer();
+        protected Timer CountDown = new Timer();
+
+        protected bool TurboRound = false;
+        protected bool Aborting = false;
+
+        public delegate void GameOverDelegate(object sender, EventArgs e);
+        public event GameOverDelegate GameOver = delegate { };
+
+        public delegate void LogMessageDelegate(object sender, LogEventArgs e);
+        public event LogMessageDelegate MessageLogged = delegate { };
+
+        public class LogEventArgs : EventArgs
+        {
+            public string Message;
+            public LogEventArgs(string Message) { this.Message = Message; }
+        }
 
         public GameStatus Status
         {
             get
             {
-                if (PlayerTwo == null) { return GameStatus.WaitingForOpponent; }
+                if (Players.Count < 2) { return GameStatus.WaitingForOpponent; }
                 if (!Clock.Enabled && CountDown.Enabled) { return GameStatus.CountDown; }
-                return Clock.Enabled || (PlayerOne == null && PlayerTwo == null) ? GameStatus.Playing : GameStatus.GameOver;
+                if (Clock.Enabled) { return GameStatus.Playing; }
+                return GameStatus.GameOver;
             }
         }
 
         public SnakeGame(SnakePlayer FirstPlayer)
         {
-            FirstPlayer.Game = this;
-            this.PlayerOne = FirstPlayer;
-            this.PlayerOne.Closed += new Client.CloseDelegate(AbortAll);
-            this.PlayerOne.Send("YOU ARE FIRST");
-            Console.WriteLine("First player connected.");
+            AddPlayer(FirstPlayer);
+            Players.First().Send("#FIRST");
+            MessageLogged(this, new LogEventArgs("First player connected"));
         }
 
-        public void Start(SnakePlayer SecondPlayer)
+        public void AddSecondPlayer(SnakePlayer SecondPlayer)
         {
-            SecondPlayer.Game = this;
-            this.PlayerTwo = SecondPlayer;
-            this.PlayerTwo.Closed += new Client.CloseDelegate(AbortAll);
-            this.PlayerTwo.Send("YOU ARE SECOND");
-            Console.WriteLine("Second player connected.");
+            AddPlayer(SecondPlayer);
+            Players.Last().Send("#SECOND");
+            MessageLogged(this, new LogEventArgs("Second player connected"));
+            StartGame();
         }
 
-        public void AbortAll(object sender, Client.CloseEventArgs e)
+        protected void AddPlayer(SnakePlayer Player)
         {
-            try
-            {
-                PlayerOne.Closed -= AbortAll;
-                PlayerTwo.Closed -= AbortAll;
-                try { PlayerOne.Disconnect(); }
-                catch { PlayerOne.Abort(); }
-                try { PlayerTwo.Disconnect(); }
-                catch { PlayerTwo.Abort(); }
-            }
-            catch { }
-            finally
-            {
-                Console.WriteLine("Game aborted.");
-                Program.Game = null;
-            }
+            Players.Add(Player);
+            Player.Game = this;
+            Player.Closed += new Client.CloseDelegate(AbortGame);
         }
 
-        public void InitSnakes()
+        protected void StartGame()
         {
-            for (int i = 1; i <= StartLength; i++)
+            Send("#Countdown " + CountdownDuration.ToString());
+            CountDown.Interval = CountdownDuration * 1000;
+            CountDown.Elapsed += new ElapsedEventHandler(delegate
             {
-                PlayerOne.Snake.Add(new Point(BlockHeight / 2, i + 2));
-                PlayerTwo.Snake.Add(new Point(BlockHeight / 2, BlockWidth - i - 1));
+                CountDown.Stop();
+                CreateSnakes();
+                PlaceFood();
+                Clock.Interval = ClockInterval;
+                Clock.Elapsed += new ElapsedEventHandler(Clock_Elapsed);
+                Clock.Start();
+                MessageLogged(this, new LogEventArgs("Game started"));
+            });
+            CountDown.Start();
+            MessageLogged(this, new LogEventArgs("Starting game in " + CountdownDuration.ToString() + " seconds"));
+        }
+
+        public void CreateSnakes()
+        {
+            foreach (SnakePlayer P in Players)
+            {
+                for (int i = 1; i <= StartLength; i++)
+                {
+                    P.Snake.Add(new Point(BlockHeight / 2, i + 2));
+                }
             }
-            PlayerOne.CurrentDirection = Direction.Right;
-            PlayerTwo.CurrentDirection = Direction.Left;
-            RandomFood();
-            Console.WriteLine("Snakes initialized.");
+            Players.First().CurrentDirection = Direction.Right;
+            Players.Last().CurrentDirection = Direction.Left;
         }
 
         void Clock_Elapsed(object sender, ElapsedEventArgs e)
         {
-            TurboOnly = !TurboOnly;
+            TurboRound = !TurboRound;
 
-            Point HeadOne = PlayerOne.Snake[PlayerOne.Snake.Count - 1];
-            Point HeadTwo = PlayerTwo.Snake[PlayerTwo.Snake.Count - 1];
+            bool[] Fail = new bool[2];
+            bool[] AtFood = new bool[2];
+            bool[] AtTurbo = new bool[2];
 
-            Point NewPointOne = new Point(0, 0);
-            Point NewPointTwo = new Point(0, 0);
+            try { NextMove(Players.First()); }
+            catch (InvalidOperationException) { Fail[0] = true; }
+            try { NextMove(Players.Last()); }
+            catch (InvalidOperationException) { Fail[1] = true; }
 
-            foreach (SnakePlayer Player in new SnakePlayer[] { PlayerOne, PlayerTwo })
+            AtFood[0] = IsAtFood(Players.First());
+            AtFood[1] = IsAtFood(Players.Last());
+
+            if (AtFood[0] && AtFood[1] && Players.First().Head.Equals(Players.Last().Head))
             {
-                if (!TurboOnly || Player.TurboEnabled)
-                {
-                    if (Player.CurrentDirection != Player.NextDirection)
-                    {
-                        switch (Player.NextDirection)
-                        {
-                            case Direction.Up:
-                                if (Player.CurrentDirection != Direction.Down) { Player.CurrentDirection = Direction.Up; }
-                                break;
-                            case Direction.Down:
-                                if (Player.CurrentDirection != Direction.Up) { Player.CurrentDirection = Direction.Down; }
-                                break;
-                            case Direction.Left:
-                                if (Player.CurrentDirection != Direction.Right) { Player.CurrentDirection = Direction.Left; }
-                                break;
-                            case Direction.Right:
-                                if (Player.CurrentDirection != Direction.Left) { Player.CurrentDirection = Direction.Right; }
-                                break;
-                        }
-                    }
-                }
-            }
-
-            if (!TurboOnly || PlayerOne.TurboEnabled)
-            {
-                switch (PlayerOne.CurrentDirection)
-                {
-                    case Direction.Right:
-                        NewPointOne.X = HeadOne.X;
-                        NewPointOne.Y = HeadOne.Y + 1;
-                        break;
-                    case Direction.Left:
-                        NewPointOne.X = HeadOne.X;
-                        NewPointOne.Y = HeadOne.Y - 1;
-                        break;
-                    case Direction.Up:
-                        NewPointOne.X = HeadOne.X - 1;
-                        NewPointOne.Y = HeadOne.Y;
-                        break;
-                    case Direction.Down:
-                        NewPointOne.X = HeadOne.X + 1;
-                        NewPointOne.Y = HeadOne.Y;
-                        break;
-                }
-            }
-            if (!TurboOnly || PlayerTwo.TurboEnabled)
-            {
-                switch (PlayerTwo.CurrentDirection)
-                {
-                    case Direction.Right:
-                        NewPointTwo.X = HeadTwo.X;
-                        NewPointTwo.Y = HeadTwo.Y + 1;
-                        break;
-                    case Direction.Left:
-                        NewPointTwo.X = HeadTwo.X;
-                        NewPointTwo.Y = HeadTwo.Y - 1;
-                        break;
-                    case Direction.Up:
-                        NewPointTwo.X = HeadTwo.X - 1;
-                        NewPointTwo.Y = HeadTwo.Y;
-                        break;
-                    case Direction.Down:
-                        NewPointTwo.X = HeadTwo.X + 1;
-                        NewPointTwo.Y = HeadTwo.Y;
-                        break;
-                }
-            }
-
-            bool FailOne = false;
-            bool FailTwo = false;
-
-            if (!TurboOnly || PlayerOne.TurboEnabled)
-            {
-                for (int i = 0; i < PlayerOne.Snake.Count - 1; i++)
-                {
-                    if ((PlayerOne.Snake[i].X == NewPointOne.X) && (PlayerOne.Snake[i].Y == NewPointOne.Y))
-                    {
-                        FailOne = true;
-                    }
-                }
-            }
-            if (!TurboOnly || PlayerTwo.TurboEnabled)
-            {
-                for (int i = 0; i < PlayerTwo.Snake.Count - 1; i++)
-                {
-                    if ((PlayerTwo.Snake[i].X == NewPointTwo.X) && (PlayerTwo.Snake[i].Y == NewPointTwo.Y))
-                    {
-                        FailTwo = true;
-                    }
-                }
-            }
-            if (!TurboOnly || PlayerOne.TurboEnabled)
-            {
-                if (NewPointOne.X < 1 || NewPointOne.X > this.BlockWidth || NewPointOne.Y < 1 || NewPointOne.Y > this.BlockHeight)
-                {
-                    FailOne = true;
-                }
-            }
-            if (!TurboOnly || PlayerTwo.TurboEnabled)
-            {
-                if (NewPointTwo.X < 1 || NewPointTwo.X > this.BlockWidth || NewPointTwo.Y < 1 || NewPointTwo.Y > this.BlockHeight)
-                {
-                    FailTwo = true;
-                }
-            }
-
-            bool AtFoodOne = false;
-            bool AtFoodTwo = false;
-            Point WhichFood = new Point(0, 0);
-
-            for (int i = 0; i < Food.Count; i++)
-            {
-                if (!TurboOnly || PlayerOne.TurboEnabled)
-                {
-                    if (Food[i].X == HeadOne.X && Food[i].Y == HeadOne.Y)
-                    {
-                        AtFoodOne = true;
-                        WhichFood = Food[i];
-                    }
-                }
-                if (!TurboOnly || PlayerTwo.TurboEnabled)
-                {
-                    if (Food[i].X == HeadTwo.X && Food[i].Y == HeadTwo.Y)
-                    {
-                        AtFoodTwo = true;
-                        WhichFood = Food[i];
-                    }
-                }
-            }
-
-            if (!AtFoodOne)
-            {
-                if (!TurboOnly || PlayerOne.TurboEnabled)
-                {
-                    PlayerOne.Snake.RemoveAt(0);
-                }
-                if (AtFoodTwo)
-                {
-                    if (PlayerOne.Snake.Count < 1) { FailOne = true; }
-                    else { PlayerOne.Snake.RemoveAt(0); }
-                }
-            }
-            if (!AtFoodTwo)
-            {
-                if (!TurboOnly || PlayerTwo.TurboEnabled)
-                {
-                    PlayerTwo.Snake.RemoveAt(0);
-                }
-                if (AtFoodOne)
-                {
-                    if (PlayerTwo.Snake.Count < 1) { FailTwo = true; }
-                    else { PlayerTwo.Snake.RemoveAt(0); }
-                }
-            }
-
-            if (AtFoodOne || AtFoodTwo)
-            {
-                Food.Remove(WhichFood);
-                RandomFood();
-                FoodEaten++;
-                Console.WriteLine("Ate a food. Yam-yam :)");
-            }
-
-            if (!TurboOnly || PlayerOne.TurboEnabled)
-            {
-                PlayerOne.Snake.Add(NewPointOne);
-            }
-            if (!TurboOnly || PlayerTwo.TurboEnabled)
-            {
-                PlayerTwo.Snake.Add(NewPointTwo);
-            }
-
-            if (PlayerOne.TurboEnabled)
-            {
-                PlayerOne.Turbo--;
-                if (PlayerOne.Turbo == 0) { PlayerOne.TurboEnabled = false; }
-            }
-            if (PlayerTwo.TurboEnabled)
-            {
-                PlayerTwo.Turbo--;
-                if (PlayerTwo.Turbo == 0) { PlayerTwo.TurboEnabled = false; }
-            }
-
-            // TURBO START
-
-            bool AtTurboOne = false;
-            bool AtTurboTwo = false;
-            Point WhichTurboOne = new Point(0, 0);
-            Point WhichTurboTwo = new Point(0, 0);
-
-            for (int i = 0; i < Turbo.Count; i++)
-            {
-                if (!TurboOnly || PlayerOne.TurboEnabled)
-                {
-                    if (Turbo[i].X == HeadOne.X && Turbo[i].Y == HeadOne.Y)
-                    {
-                        AtTurboOne = true;
-                        WhichTurboOne = Turbo[i];
-                    }
-                }
-                if (!TurboOnly || PlayerTwo.TurboEnabled)
-                {
-                    if (Turbo[i].X == HeadTwo.X && Turbo[i].Y == HeadTwo.Y)
-                    {
-                        AtTurboTwo = true;
-                        WhichTurboTwo = Turbo[i];
-                    }
-                }
-            }
-
-            if(!(AtTurboOne && AtTurboTwo && WhichTurboOne.X == WhichTurboTwo.X && WhichTurboOne.Y == WhichTurboTwo.Y))
-            {
-                if (AtTurboOne)
-                {
-                    PlayerOne.Turbo += 20;
-                    Turbo.Remove(WhichTurboOne);
-                    RandomTurbo();
-                }
-                if (AtTurboTwo)
-                {
-                    PlayerTwo.Turbo += 20;
-                    Turbo.Remove(WhichTurboTwo);
-                    RandomTurbo();
-                }
-            }
-
-            if (AtTurboOne || AtTurboTwo)
-            {
-                Console.WriteLine("Ate a turbo! Yeah!");
-            }
-
-            // TURBO END
-
-            if (FailOne && FailTwo)
-            {
-                GameOver();
-                return;
-            }
-            if (FailOne)
-            {
-                Winner = PlayerTwo;
-                GameOver();
-                return;
-            }
-            if (FailTwo)
-            {
-                Winner = PlayerOne;
-                GameOver();
-                return;
-            }
-
-            Clock.Interval = CurrentInterval;
-
-            string DataFood = string.Join(";", Food.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string DataTurbo = string.Join(";", Turbo.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string DataSnakeOne = string.Join(";", PlayerOne.Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string DataSnakeTwo = string.Join(";", PlayerTwo.Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-
-            string st = "STATUS " + DataFood + "\t" + DataSnakeOne + "\t" + DataSnakeTwo + "\t" + DataTurbo;
-            PlayerOne.Send(st + "\t" + (PlayerOne.TurboEnabled ? "E" : "D") + "\t" + PlayerOne.Turbo.ToString());
-            PlayerTwo.Send(st + "\t" + (PlayerTwo.TurboEnabled ? "E" : "D") + "\t" + PlayerTwo.Turbo.ToString());
-        }
-
-        public void GameOver()
-        {
-            Clock.Stop();
-            if (Winner == null)
-            {
-                PlayerOne.Send("DRAW");
-                PlayerTwo.Send("DRAW");
-                Console.WriteLine("Game over: draw");
+                AteFood(Players.First().Head);
             }
             else
             {
-                PlayerOne.Send(Winner == PlayerOne ? "YOU WON" : "YOU LOST");
-                PlayerTwo.Send(Winner == PlayerOne ? "YOU LOST" : "YOU WON");
-                Console.WriteLine("Game over: " + (Winner == PlayerOne ? "Player one won" : "Player two won"));
+                if (AtFood[0])
+                {
+                    Players.Last().Snake.RemoveAt(0);
+                    AteFood(Players.First().Head);
+                    MessageLogged(this, new LogEventArgs("Player 1 ate a food"));
+                }
+                else { Players.First().Snake.RemoveAt(0); }
+                if (AtFood[1])
+                {
+                    Players.First().Snake.RemoveAt(0);
+                    AteFood(Players.Last().Head);
+                    MessageLogged(this, new LogEventArgs("Player 2 ate a food"));
+                }
+                else { Players.Last().Snake.RemoveAt(0); }
+                if (Players.First().Snake.Count < 1) { Fail[0] = true; }
+                if (Players.Last().Snake.Count < 1) { Fail[1] = true; }
             }
-            /*PlayerOne.Disconnect();
-            PlayerTwo.Disconnect();*/
+
+            AtTurbo[0] = IsAtTurbo(Players.First());
+            AtTurbo[1] = IsAtTurbo(Players.Last());
+
+            if (AtTurbo[0] && AtTurbo[1] && Players.First().Head.Equals(Players.Last().Head))
+            {
+                AteTurbo(Players.First().Head);
+            }
+            else
+            {
+                if (AtTurbo[0])
+                {
+                    Players.First().Turbo += TurboAmount;
+                    AteFood(Players.First().Head);
+                    MessageLogged(this, new LogEventArgs("Player 1 ate a turbo"));
+                }
+                if (AtTurbo[1])
+                {
+                    Players.Last().Turbo += TurboAmount;
+                    AteFood(Players.Last().Head);
+                    MessageLogged(this, new LogEventArgs("Player 2 ate a turbo"));
+                }
+            }
+
+            foreach (SnakePlayer P in Players)
+            {
+                if (P.TurboEnabled)
+                {
+                    P.Turbo--;
+                    if (P.Turbo == 0) { P.TurboEnabled = false; }
+                }
+            }
+
+            if (Fail[0] && Fail[1]) { FinishGame(null); return; }
+            if (Fail[0]) { FinishGame(Players.Last()); return; }
+            if (Fail[1]) { FinishGame(Players.First()); return; }
+
+            SendStatus();
         }
 
-        public void SendAll(string Text)
+        protected void NextMove(SnakePlayer Player)
         {
-            PlayerOne.Send(Text);
-            PlayerTwo.Send(Text);
+            if (TurboRound && !Player.TurboEnabled) { return; }
+
+            Point Head = Player.Head;
+            Point NewHead = new Point(0, 0);
+
+            if (Player.CurrentDirection != Player.NextDirection)
+            {
+                switch (Player.NextDirection)
+                {
+                    case Direction.Up: if (Player.CurrentDirection != Direction.Down) { Player.CurrentDirection = Direction.Up; } break;
+                    case Direction.Down: if (Player.CurrentDirection != Direction.Up) { Player.CurrentDirection = Direction.Down; } break;
+                    case Direction.Left: if (Player.CurrentDirection != Direction.Right) { Player.CurrentDirection = Direction.Left; } break;
+                    case Direction.Right: if (Player.CurrentDirection != Direction.Left) { Player.CurrentDirection = Direction.Right; } break;
+                }
+            }
+            switch (Player.CurrentDirection)
+            {
+                case Direction.Right: NewHead.X = Head.X; NewHead.Y = Head.Y + 1; break;
+                case Direction.Left: NewHead.X = Head.X; NewHead.Y = Head.Y - 1; break;
+                case Direction.Up: NewHead.X = Head.X - 1; NewHead.Y = Head.Y; break;
+                case Direction.Down: NewHead.X = Head.X + 1; NewHead.Y = Head.Y; break;
+            }
+
+            bool Fail = false;
+            for (int i = 0; i < Player.Snake.Count - 1; i++)
+            {
+                if ((Player.Snake[i].X == NewHead.X) && (Player.Snake[i].Y == NewHead.Y)) { Fail = true; }
+            }
+            if (NewHead.X < 1 || NewHead.X > BlockWidth || NewHead.Y < 1 || NewHead.Y > BlockHeight) { Fail = true; }
+            if (Fail) { throw new InvalidOperationException(); }
+
+            Player.Snake.Add(NewHead);
         }
 
-        public void RandomFood()
+        protected bool IsAtFood(SnakePlayer Player)
         {
-            bool Problem = false;
-            int RandomX = 0;
-            int RandomY = 0;
+            foreach (Point F in Food) { if (F.X == Player.Head.X && F.Y == Player.Head.Y) { return true; } }
+            return false;
+        }
+
+        protected bool IsAtTurbo(SnakePlayer Player)
+        {
+            foreach (Point T in Turbo) { if (T.X == Player.Head.X && T.Y == Player.Head.Y) { return true; } }
+            return false;
+        }
+
+        protected void AteFood(Point Which)
+        {
+            RemoveFromPointList(Food, Which);
+            PlaceFood();
+        }
+
+        protected void AteTurbo(Point Which)
+        {
+            RemoveFromPointList(Turbo, Which);
+            PlaceTurbo();
+        }
+
+        protected void RemoveFromPointList(List<Point> List, Point What)
+        {
+            Point TR = new Point(0, 0);
+            bool found = false;
+            foreach (Point F in List)
+            {
+                if (F.X == What.X && F.Y == What.Y) { TR = F; found = true; break; }
+            }
+            if (found) { List.Remove(TR); }
+        }
+
+        protected void SendStatus()
+        {
+            string F = string.Join(";", Food.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
+            string T = string.Join(";", Turbo.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
+            string S1 = string.Join(";", Players.First().Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
+            string S2 = string.Join(";", Players.Last().Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
+
+            string Status = "#Status " + F + "\t" + T + "\t" + S1 + "\t" + S2;
+            Players.First().Send(Status + "\t" + (Players.First().TurboEnabled ? "E" : "D") + "\t" + Players.First().Turbo.ToString());
+            Players.Last().Send(Status + "\t" + (Players.Last().TurboEnabled ? "E" : "D") + "\t" + Players.Last().Turbo.ToString());
+        }
+
+        protected void FinishGame(SnakePlayer Winner)
+        {
+            if (Winner == null)
+            {
+                Send("#Draw");
+                MessageLogged(this, new LogEventArgs("Game over: Draw"));
+            }
+            else
+            {
+                int Won = Winner == Players.First() ? 1 : 2;
+                Send("#Winner " + Won.ToString());
+                MessageLogged(this, new LogEventArgs("Game over: Player " + Won.ToString() + " won"));
+            }
+        }
+
+        public void AbortGame() { AbortGame(null, null); }
+        protected void AbortGame(object sender, Client.CloseEventArgs e)
+        {
+            if (Aborting) { return; }
+            Clock.Stop();
+            try
+            {
+                foreach (SnakePlayer P in Players)
+                {
+                    try { P.Disconnect(); }
+                    catch { P.Abort(); }
+                }
+            }
+            catch { }
+            finally
+            {
+                GameOver(this, new EventArgs());
+                MessageLogged(this, new LogEventArgs("Players disconnected."));
+            }
+        }
+
+        public void Send(string Text)
+        {
+            foreach (SnakePlayer P in Players) { P.Send(Text); }
+        }
+
+        public void Send(byte[] Data)
+        {
+            foreach (SnakePlayer P in Players) { P.Send(Data); }
+        }
+
+        protected Point FreePoint()
+        {
+            int X = 0, Y = 0;
             do
             {
-                Problem = false;
-                RandomX = Tools.Random.Next(1, BlockWidth);
-                RandomY = Tools.Random.Next(1, BlockHeight);
-                for (int i = 0; i < Food.Count; i++)
-                {
-                    if (Food[i].X == RandomX && Food[i].Y == RandomY)
-                    {
-                        Problem = true;
-                    }
-                }
-                for (int i = 0; i < Turbo.Count; i++)
-                {
-                    if (Turbo[i].X == RandomX && Turbo[i].Y == RandomY)
-                    {
-                        Problem = true;
-                    }
-                }
-            } while (Problem);
-            Food.Add(new Point(RandomX, RandomY));
-            RandomTurbo();
-            Console.WriteLine("New food generated.");
+                X = Tools.Random.Next(2, BlockWidth);
+                Y = Tools.Random.Next(2, BlockHeight);
+                if (Food.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
+                if (Turbo.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
+                return new Point(X, Y);
+            } while (true);
         }
 
-        public void RandomTurbo()
+        public void PlaceFood()
         {
-            bool Problem = false;
-            int RandomX = 0;
-            int RandomY = 0;
-            do
-            {
-                Problem = false;
-                RandomX = Tools.Random.Next(1, BlockWidth);
-                RandomY = Tools.Random.Next(1, BlockHeight);
-                for (int i = 0; i < Food.Count; i++)
-                {
-                    if (Food[i].X == RandomX && Food[i].Y == RandomY)
-                    {
-                        Problem = true;
-                    }
-                }
-                for (int i = 0; i < Turbo.Count; i++)
-                {
-                    if (Turbo[i].X == RandomX && Turbo[i].Y == RandomY)
-                    {
-                        Problem = true;
-                    }
-                }
-            } while (Problem);
-            Turbo.Add(new Point(RandomX, RandomY));
-            Console.WriteLine("New turbo generated.");
+            Food.Add(FreePoint());
         }
 
-        public void InitCountdown()
+        public void PlaceTurbo()
         {
-            SendAll("START COUNTDOWN");
-            PlayerOne.Send("OTHER NAME " + PlayerTwo.Name);
-            PlayerTwo.Send("OTHER NAME " + PlayerOne.Name);
-            CountDown.Interval = 3000;
-            CountDown.Elapsed += new ElapsedEventHandler(delegate
-            {
-                CountDown.Stop();
-                Clock.Interval = CurrentInterval;
-                Clock.Elapsed += new ElapsedEventHandler(Clock_Elapsed);
-                InitSnakes();
-                Clock.Start();
-                Console.WriteLine("Starting game...");
-            });
-            CountDown.Start();
-            Console.WriteLine("Staring countdown...");
+            Turbo.Add(FreePoint());
         }
     }
 
     public class SnakePlayer : Client
     {
-        public string Name = "";
         public Direction CurrentDirection;
         public Direction NextDirection;
-        public List<Point> Snake = new List<Point>();
+
         public SnakeGame Game;
+        public List<Point> Snake = new List<Point>();
+
         public int Turbo = 0;
         public bool TurboEnabled = false;
+
+        public Point Head { get { return Snake.Last(); } }
 
         public SnakePlayer()
         {
@@ -480,37 +355,18 @@ namespace DualSnakeServer
 
         void Client_Received(object sender, Client.TransmitEventArgs e)
         {
-            SnakePlayer OtherPlayer = Game.PlayerOne == this ? Game.PlayerTwo : Game.PlayerOne;
-            if (this.Name == "")
+            if (e.Text.StartsWith("#D "))
             {
-                try
+                switch (e.Text.Substring(3))
                 {
-                    if (!e.Text.StartsWith("NAME ")) { throw new Exception(); }
-                    string N = e.Text.Substring(5).Trim();
-                    if (N == "") { throw new Exception(); }
-                    this.Name = N;
-                    Console.WriteLine("Name " + N + " received.");
-                    if (OtherPlayer != null && OtherPlayer.Name != "")
-                    {
-                        Game.InitCountdown();
-                    }
-                }
-                catch { this.Abort(); }
-                return;
-            }
-
-            if (e.Text.StartsWith("DIRECTION "))
-            {
-                switch (e.Text.Substring(10))
-                {
-                    case "UP": this.NextDirection = Direction.Up; return;
-                    case "DOWN": this.NextDirection = Direction.Down; return;
-                    case "LEFT": this.NextDirection = Direction.Left; return;
-                    case "RIGHT": this.NextDirection = Direction.Right; return;
+                    case "up": this.NextDirection = Direction.Up; return;
+                    case "down": this.NextDirection = Direction.Down; return;
+                    case "left": this.NextDirection = Direction.Left; return;
+                    case "right": this.NextDirection = Direction.Right; return;
                 }
             }
 
-            if (e.Text == "TURBO")
+            if (e.Text == "#Turbo")
             {
                 this.TurboEnabled = !this.TurboEnabled;
             }
@@ -547,13 +403,13 @@ namespace DualSnakeServer
             this.X = X;
             this.Y = Y;
         }
-        public override bool Equals(object obj)
+        public bool Equals(Point obj)
         {
-            return (((Point)obj).X == this.X && ((Point)obj).Y == this.Y);
+            return obj.X == this.X && obj.Y == this.Y;
         }
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return this.X * 1000 + this.Y;
         }
         public override string ToString()
         {

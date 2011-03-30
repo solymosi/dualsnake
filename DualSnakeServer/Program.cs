@@ -26,7 +26,7 @@ namespace DualSnakeServer
         {
             if (Game == null || Game.Status == GameStatus.GameOver)
             {
-                if (Game != null) { Game.AbortAll(null, null); }
+                if (Game != null) { Game.AbortGame(); }
                 Game = new SnakeGame(e.Client);
                 return;
             }
@@ -34,7 +34,7 @@ namespace DualSnakeServer
             {
                 if (Game.Status == GameStatus.WaitingForOpponent)
                 {
-                    Game.Start(e.Client);
+                    Game.AddSecondPlayer(e.Client);
                 }
                 else
                 {

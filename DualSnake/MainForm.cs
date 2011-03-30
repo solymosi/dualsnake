@@ -138,6 +138,9 @@ namespace DualSnake
                 case Keys.Space:
                     Server.Send("#Turbo");
                     break;
+                case Keys.D0:
+                    if (e.Alt) { Server.Send("#MaxTurbo"); }
+                    break;
             }
         }
     }

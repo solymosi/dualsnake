@@ -144,6 +144,10 @@ namespace DualSnakeServer
                 if (Players.Last().Snake.Count < 1) { Fail[1] = true; }
             }
 
+            if (Fail[0] && Fail[1]) { FinishGame(null); return; }
+            if (Fail[0]) { FinishGame(Players.Last()); return; }
+            if (Fail[1]) { FinishGame(Players.First()); return; }
+
             AtTurbo[0] = IsAtTurbo(Players.First());
             AtTurbo[1] = IsAtTurbo(Players.Last());
 
@@ -175,10 +179,6 @@ namespace DualSnakeServer
                     if (P.Turbo <= 0) { P.Turbo = 0; P.TurboEnabled = false; }
                 }
             }
-
-            if (Fail[0] && Fail[1]) { FinishGame(null); return; }
-            if (Fail[0]) { FinishGame(Players.Last()); return; }
-            if (Fail[1]) { FinishGame(Players.First()); return; }
 
             SendStatus();
         }
@@ -287,6 +287,7 @@ namespace DualSnakeServer
         {
             if (Aborting) { return; }
             Clock.Stop();
+            this.Aborting = true;
             try
             {
                 foreach (SnakePlayer P in Players)
@@ -373,6 +374,11 @@ namespace DualSnakeServer
             if (e.Text == "#Turbo")
             {
                 this.TurboEnabled = !this.TurboEnabled;
+            }
+
+            if (e.Text == "#MaxTurbo")
+            {
+                this.Turbo = 10000;
             }
         }
     }

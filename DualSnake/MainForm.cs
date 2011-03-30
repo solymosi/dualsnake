@@ -89,47 +89,28 @@ namespace DualSnake
 
             if (e.Text.StartsWith("#Status "))
             {
-                lock (this)
-                {
-                    string[] pqq = e.Text.Substring(8).Split('\t');
-                    string fud = pqq[0];
-                    string t = pqq[1];
-                    string s1 = pqq[2];
-                    string s2 = pqq[3];
-                    TurboEnabled = pqq[4] == "E";
-                    TurboCounter = int.Parse(pqq[5]);
-                    Food.Clear();
-                    string[] Foods = fud.Split(new string[] { ";" }, StringSplitOptions.None);
-                    foreach (string FD in Foods)
-                    {
-                        string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
-                        Food.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                    }
-                    Turbo.Clear();
-                    string[] Turbos = t.Split(new string[] { ";" }, StringSplitOptions.None);
-                    foreach (string FD in Turbos)
-                    {
-                        string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
-                        Turbo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                    }
-                    SnakeOne.Clear();
-                    string[] Points = s1.Split(new string[] { ";" }, StringSplitOptions.None);
-                    foreach (string P in Points)
-                    {
-                        string[] Parts = P.Split(new string[] { "," }, StringSplitOptions.None);
-                        SnakeOne.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                    }
-                    SnakeTwo.Clear();
-                    string[] pts = s2.Split(new string[] { ";" }, StringSplitOptions.None);
-                    foreach (string Q in pts)
-                    {
-                        string[] Parts = Q.Split(new string[] { "," }, StringSplitOptions.None);
-                        SnakeTwo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                    }
-                }
+                string[] pqq = e.Text.Substring(8).Split('\t');
+                Food = FromRepresentation(pqq[0]);
+                Turbo = FromRepresentation(pqq[1]);
+                SnakeOne = FromRepresentation(pqq[2]);
+                SnakeTwo = FromRepresentation(pqq[3]);
+                TurboEnabled = pqq[4] == "E";
+                TurboCounter = int.Parse(pqq[5]);
+
                 SetStatus("TURBO: " + TurboCounter.ToString() + "     Press and hold SPACE to activate");
                 RePaint();
             }
+        }
+
+        private List<Point> FromRepresentation(string Input)
+        {
+            List<Point> list = new List<Point>();
+            char[] chars = Input.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (i % 2 == 0) { list.Add(new Point(((int)chars[i]) - 20, ((int)chars[i + 1]) - 20)); }
+            }
+            return list;
         }
 
         private void MainForm_Paint(object sender, PaintEventArgs e)

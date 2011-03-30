@@ -258,14 +258,20 @@ namespace DualSnakeServer
 
         protected void SendStatus()
         {
-            string F = string.Join(";", Food.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string T = string.Join(";", Turbo.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string S1 = string.Join(";", Players.First().Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string S2 = string.Join(";", Players.Last().Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-
-            string Status = "#Status " + F + "\t" + T + "\t" + S1 + "\t" + S2;
+            string Status = "#Status " + GetRepresentation(Food) + "\t" + GetRepresentation(Turbo) + "\t" + GetRepresentation(Players.First().Snake) + "\t" + GetRepresentation(Players.Last().Snake);
             Players.First().Send(Status + "\t" + (Players.First().TurboEnabled ? "E" : "D") + "\t" + Players.First().Turbo.ToString());
             Players.Last().Send(Status + "\t" + (Players.Last().TurboEnabled ? "E" : "D") + "\t" + Players.Last().Turbo.ToString());
+        }
+
+        protected string GetRepresentation(List<Point> PointList)
+        {
+            List<char> chars = new List<char>();
+            for (int i = 0; i < PointList.Count; i++)
+            {
+                chars.Add((char)(PointList[i].X + 20));
+                chars.Add((char)(PointList[i].Y + 20));
+            }
+            return new string(chars.ToArray());
         }
 
         protected void FinishGame(SnakePlayer Winner)

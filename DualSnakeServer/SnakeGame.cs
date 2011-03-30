@@ -12,8 +12,7 @@ namespace DualSnakeServer
         public int Speed = 1;
         public int StartLength = 5;
         public int FoodEaten = 0;
-        public int CurrentSpeed { get { return Math.Min(FoodEaten / 5 + 1, 10); } }
-        public int CurrentInterval { get { return 80; } }
+        public int CurrentInterval = 80;
         public List<Point> Food = new List<Point>();
         public List<Point> Turbo = new List<Point>();
         public SnakePlayer PlayerOne;

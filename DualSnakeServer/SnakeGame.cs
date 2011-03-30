@@ -13,7 +13,7 @@ namespace DualSnakeServer
         public int StartLength = 5;
         public int FoodEaten = 0;
         public int CurrentSpeed { get { return Math.Min(FoodEaten / 5 + 1, 10); } }
-        public int CurrentInterval { get { return (275 - CurrentSpeed * 25) / 2; } }
+        public int CurrentInterval { get { return 80; } }
         public List<Point> Food = new List<Point>();
         public List<Point> Turbo = new List<Point>();
         public SnakePlayer PlayerOne;
@@ -97,7 +97,7 @@ namespace DualSnakeServer
 
             foreach (SnakePlayer Player in new SnakePlayer[] { PlayerOne, PlayerTwo })
             {
-                if (!TurboOnly || Player.Turbo > 0)
+                if (!TurboOnly || Player.TurboEnabled)
                 {
                     if (Player.CurrentDirection != Player.NextDirection)
                     {
@@ -120,7 +120,7 @@ namespace DualSnakeServer
                 }
             }
 
-            if (!TurboOnly || PlayerOne.Turbo > 0)
+            if (!TurboOnly || PlayerOne.TurboEnabled)
             {
                 switch (PlayerOne.CurrentDirection)
                 {
@@ -142,7 +142,7 @@ namespace DualSnakeServer
                         break;
                 }
             }
-            if (!TurboOnly || PlayerTwo.Turbo > 0)
+            if (!TurboOnly || PlayerTwo.TurboEnabled)
             {
                 switch (PlayerTwo.CurrentDirection)
                 {
@@ -168,7 +168,7 @@ namespace DualSnakeServer
             bool FailOne = false;
             bool FailTwo = false;
 
-            if (!TurboOnly || PlayerOne.Turbo > 0)
+            if (!TurboOnly || PlayerOne.TurboEnabled)
             {
                 for (int i = 0; i < PlayerOne.Snake.Count - 1; i++)
                 {
@@ -178,7 +178,7 @@ namespace DualSnakeServer
                     }
                 }
             }
-            if (!TurboOnly || PlayerTwo.Turbo > 0)
+            if (!TurboOnly || PlayerTwo.TurboEnabled)
             {
                 for (int i = 0; i < PlayerTwo.Snake.Count - 1; i++)
                 {
@@ -188,14 +188,14 @@ namespace DualSnakeServer
                     }
                 }
             }
-            if (!TurboOnly || PlayerOne.Turbo > 0)
+            if (!TurboOnly || PlayerOne.TurboEnabled)
             {
                 if (NewPointOne.X < 1 || NewPointOne.X > this.BlockWidth || NewPointOne.Y < 1 || NewPointOne.Y > this.BlockHeight)
                 {
                     FailOne = true;
                 }
             }
-            if (!TurboOnly || PlayerTwo.Turbo > 0)
+            if (!TurboOnly || PlayerTwo.TurboEnabled)
             {
                 if (NewPointTwo.X < 1 || NewPointTwo.X > this.BlockWidth || NewPointTwo.Y < 1 || NewPointTwo.Y > this.BlockHeight)
                 {
@@ -209,7 +209,7 @@ namespace DualSnakeServer
 
             for (int i = 0; i < Food.Count; i++)
             {
-                if (!TurboOnly || PlayerOne.Turbo > 0)
+                if (!TurboOnly || PlayerOne.TurboEnabled)
                 {
                     if (Food[i].X == HeadOne.X && Food[i].Y == HeadOne.Y)
                     {
@@ -217,7 +217,7 @@ namespace DualSnakeServer
                         WhichFood = Food[i];
                     }
                 }
-                if (!TurboOnly || PlayerTwo.Turbo > 0)
+                if (!TurboOnly || PlayerTwo.TurboEnabled)
                 {
                     if (Food[i].X == HeadTwo.X && Food[i].Y == HeadTwo.Y)
                     {
@@ -229,7 +229,7 @@ namespace DualSnakeServer
 
             if (!AtFoodOne)
             {
-                if (!TurboOnly || PlayerOne.Turbo > 0)
+                if (!TurboOnly || PlayerOne.TurboEnabled)
                 {
                     PlayerOne.Snake.RemoveAt(0);
                 }
@@ -241,7 +241,7 @@ namespace DualSnakeServer
             }
             if (!AtFoodTwo)
             {
-                if (!TurboOnly || PlayerTwo.Turbo > 0)
+                if (!TurboOnly || PlayerTwo.TurboEnabled)
                 {
                     PlayerTwo.Snake.RemoveAt(0);
                 }
@@ -260,11 +260,11 @@ namespace DualSnakeServer
                 Console.WriteLine("Ate a food. Yam-yam :)");
             }
 
-            if (!TurboOnly || PlayerOne.Turbo > 0)
+            if (!TurboOnly || PlayerOne.TurboEnabled)
             {
                 PlayerOne.Snake.Add(NewPointOne);
             }
-            if (!TurboOnly || PlayerTwo.Turbo > 0)
+            if (!TurboOnly || PlayerTwo.TurboEnabled)
             {
                 PlayerTwo.Snake.Add(NewPointTwo);
             }
@@ -289,7 +289,7 @@ namespace DualSnakeServer
 
             for (int i = 0; i < Turbo.Count; i++)
             {
-                if (!TurboOnly || PlayerOne.Turbo > 0)
+                if (!TurboOnly || PlayerOne.TurboEnabled)
                 {
                     if (Turbo[i].X == HeadOne.X && Turbo[i].Y == HeadOne.Y)
                     {
@@ -297,7 +297,7 @@ namespace DualSnakeServer
                         WhichTurboOne = Turbo[i];
                     }
                 }
-                if (!TurboOnly || PlayerTwo.Turbo > 0)
+                if (!TurboOnly || PlayerTwo.TurboEnabled)
                 {
                     if (Turbo[i].X == HeadTwo.X && Turbo[i].Y == HeadTwo.Y)
                     {
@@ -348,22 +348,16 @@ namespace DualSnakeServer
                 return;
             }
 
-            Clock.Interval = CurrentInterval / 3;
+            Clock.Interval = CurrentInterval;
 
             string DataFood = string.Join(";", Food.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
             string DataTurbo = string.Join(";", Turbo.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
             string DataSnakeOne = string.Join(";", PlayerOne.Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
             string DataSnakeTwo = string.Join(";", PlayerTwo.Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
 
-            SendAll("FOOD " + DataFood);
-            SendAll("TURBO " + DataTurbo);
-            SendAll("SNAKE ONE " + DataSnakeOne);
-            SendAll("SNAKE TWO " + DataSnakeTwo);
-
-            PlayerOne.Send("TRB " + (PlayerOne.TurboEnabled ? "ENABLED" : "DISABLED"));
-            PlayerOne.Send("MY TURBO " + PlayerOne.Turbo.ToString());
-            PlayerTwo.Send("TRB " + (PlayerTwo.TurboEnabled ? "ENABLED" : "DISABLED"));
-            PlayerTwo.Send("MY TURBO " + PlayerTwo.Turbo.ToString());
+            string st = "STATUS " + DataFood + "\t" + DataSnakeOne + "\t" + DataSnakeTwo + "\t" + DataTurbo;
+            PlayerOne.Send(st + "\t" + (PlayerOne.TurboEnabled ? "E" : "D") + "\t" + PlayerOne.Turbo.ToString());
+            PlayerTwo.Send(st + "\t" + (PlayerTwo.TurboEnabled ? "E" : "D") + "\t" + PlayerTwo.Turbo.ToString());
         }
 
         public void GameOver()
@@ -381,8 +375,8 @@ namespace DualSnakeServer
                 PlayerTwo.Send(Winner == PlayerOne ? "YOU LOST" : "YOU WON");
                 Console.WriteLine("Game over: " + (Winner == PlayerOne ? "Player one won" : "Player two won"));
             }
-            PlayerOne.Disconnect();
-            PlayerTwo.Disconnect();
+            /*PlayerOne.Disconnect();
+            PlayerTwo.Disconnect();*/
         }
 
         public void SendAll(string Text)
@@ -459,11 +453,10 @@ namespace DualSnakeServer
             CountDown.Elapsed += new ElapsedEventHandler(delegate
             {
                 CountDown.Stop();
-                Clock.Interval = CurrentInterval / 3;
+                Clock.Interval = CurrentInterval;
                 Clock.Elapsed += new ElapsedEventHandler(Clock_Elapsed);
                 InitSnakes();
                 Clock.Start();
-                SendAll("START");
                 Console.WriteLine("Starting game...");
             });
             CountDown.Start();
@@ -516,6 +509,11 @@ namespace DualSnakeServer
                     case "LEFT": this.NextDirection = Direction.Left; return;
                     case "RIGHT": this.NextDirection = Direction.Right; return;
                 }
+            }
+
+            if (e.Text == "TURBO")
+            {
+                this.TurboEnabled = !this.TurboEnabled;
             }
         }
     }

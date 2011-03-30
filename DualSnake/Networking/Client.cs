@@ -245,14 +245,19 @@ namespace Solymosi.Networking.Sockets
         /// <param name="Result">The result object of the asynchronous operation.</param>
         protected void ReceiveCallback(IAsyncResult Result)
         {
+            int Received = 0;
             try
             {
-                int Received = Sock.EndReceive(Result);
+                Received = Sock.EndReceive(Result);
                 if (Received == 0) { throw new SocketException(); }
-                this.AddReceivedData(this.ReceiveBuffer, Received);
-                this.Receive();
             }
-            catch (Exception e) { this.Abort(e); }
+            catch (Exception e)
+            {
+                this.Abort(e);
+                return;
+            }
+            this.AddReceivedData(this.ReceiveBuffer, Received);
+            this.Receive();
         }
 
         /// <summary>

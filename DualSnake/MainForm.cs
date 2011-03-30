@@ -27,7 +27,11 @@ namespace DualSnake
             this.ClientSize = new Size(500, 500);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Server = new Client();
-            Server.Connect("localhost", 1991);
+            Server.Connect("10.111.111.221", 1991);
+            Server.Closed += new Client.CloseDelegate(delegate
+            {
+                
+            });
             Server.Connected += new Client.ConnectDelegate(delegate
             {
                 Server.Send("NAME valaki");
@@ -37,60 +41,51 @@ namespace DualSnake
 
         void Server_Received(object sender, Client.TransmitEventArgs e)
         {
-            if (e.Text.StartsWith("FOOD "))
+            if (e.Text.StartsWith("STATUS "))
             {
+                string[] pqq = e.Text.Substring(7).Split('\t');
+                string fud = pqq[0];
+                string s1 = pqq[1];
+                string s2 = pqq[2];
+                string t = pqq[3];
+                TurboEnabled = pqq[4] == "E";
+                TurboCounter = int.Parse(pqq[5]);
+
                 Food.Clear();
-                string[] Foods = e.Text.Substring(5).Split(new string[] { ";" }, StringSplitOptions.None);
+                string[] Foods = fud.Split(new string[] { ";" }, StringSplitOptions.None);
                 foreach (string FD in Foods)
                 {
                     string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
                     Food.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
                 }
-            }
 
-            if (e.Text.StartsWith("TURBO "))
-            {
                 Turbo.Clear();
-                string[] Turbos = e.Text.Substring(5).Split(new string[] { ";" }, StringSplitOptions.None);
+                string[] Turbos = t.Split(new string[] { ";" }, StringSplitOptions.None);
                 foreach (string FD in Turbos)
                 {
                     string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
                     Turbo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
                 }
-            }
 
-            if (e.Text.StartsWith("SNAKE ONE "))
-            {
                 SnakeOne.Clear();
-                string[] Points = e.Text.Substring(10).Split(new string[] { ";" }, StringSplitOptions.None);
+                string[] Points = s1.Split(new string[] { ";" }, StringSplitOptions.None);
                 foreach (string P in Points)
                 {
                     string[] Parts = P.Split(new string[] { "," }, StringSplitOptions.None);
                     SnakeOne.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
                 }
-            }
 
-            if (e.Text.StartsWith("SNAKE TWO "))
-            {
+
                 SnakeTwo.Clear();
-                string[] Points = e.Text.Substring(10).Split(new string[] { ";" }, StringSplitOptions.None);
-                foreach (string P in Points)
+                string[] pts = s2.Split(new string[] { ";" }, StringSplitOptions.None);
+                foreach (string Q in pts)
                 {
-                    string[] Parts = P.Split(new string[] { "," }, StringSplitOptions.None);
+                    string[] Parts = Q.Split(new string[] { "," }, StringSplitOptions.None);
                     SnakeTwo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
                 }
-            }
 
-            if (e.Text.StartsWith("TRB "))
-            {
-                TurboEnabled = (e.Text.Substring(4) == "ENABLED");
+                this.Invoke((MethodInvoker)delegate { this.Refresh(); });
             }
-            if (e.Text.StartsWith("MY TURBO "))
-            {
-                TurboCounter = int.Parse(e.Text.Substring(9));
-            }
-
-            this.Invoke((MethodInvoker)delegate { this.Refresh(); });
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
@@ -121,7 +116,7 @@ namespace DualSnake
                 GFX.FillRectangle(Yellow ? Brushes.Yellow : Brushes.LightBlue, new Rectangle(10 * (SnakeTwo[i].Y - 1) + 2, 10 * (SnakeTwo[i].X - 1) + 2, 10, 10));
             }
             e.Graphics.DrawImage(Temp, 0, 0, Temp.Width, Temp.Height);
-            e.Graphics.DrawString("Turbo is " + (TurboEnabled ? "ACTIVE (press SPACE to deactivate)" : "inactive (press SPACE to activate)") + " - " + TurboCounter.ToString() + " units remaining.", new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.Yellow, new PointF(10, this.Height - 20));
+            e.Graphics.DrawString("Turbo is " + (TurboEnabled ? "ACTIVE (press SPACE to deactivate)" : "inactive (press SPACE to activate)") + " - " + TurboCounter.ToString() + " units remaining.", new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.Yellow, new PointF(10, 10));
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -144,6 +139,9 @@ namespace DualSnake
                     break;
                 case Keys.Right:
                     Server.Send("DIRECTION RIGHT");
+                    break;
+                case Keys.Space:
+                    Server.Send("TURBO");
                     break;
             }
         }

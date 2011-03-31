@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Solymosi.Networking.Sockets;
+using System.Net.Sockets;
 
 namespace DualSnakeServer
 {
@@ -23,6 +24,7 @@ namespace DualSnakeServer
         static void Server_Connected(object sender, Server<SnakePlayer>.ConnectionEventArgs e)
         {
             SnakeGame TargetGame = null;
+            e.Client.Socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
             foreach (SnakeGame G in Games)
             {
                 if (G.Status == GameStatus.WaitingForOpponent) { TargetGame = G; break; }

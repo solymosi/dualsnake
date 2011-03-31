@@ -161,6 +161,9 @@ namespace DualSnake
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
             Graphics GFX = e.Graphics;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
+            e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
             GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(0, 0, BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize));
             for (int i = 0; i < Food.Count; i++)
             {
@@ -187,7 +190,9 @@ namespace DualSnake
             if (Status == "[TURBO]")
             {
                 GFX.DrawImage(Resources.TurboIcon, new PointF(15, BlockHeight * BlockDisplaySize + 3));
-                GFX.DrawString(TurboCounter.ToString(), new Font(new FontFamily("trebuchet ms"), 11, FontStyle.Bold), TurboCounter > 0 ? Brushes.Yellow : Brushes.Gray, new PointF(50, BlockHeight * BlockDisplaySize + 6));
+                GFX.DrawRectangle(new Pen(Color.FromArgb(170, 106, 0)), new Rectangle(50, BlockHeight * BlockDisplaySize + 8, 201, 21));
+                GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(51, BlockHeight * BlockDisplaySize + 9, 200, 20));
+                GFX.DrawImageUnscaledAndClipped(Resources.PowerMeter, new Rectangle(51, BlockHeight * BlockDisplaySize + 9, TurboCounter * 2, 20));
             }
             else
             {

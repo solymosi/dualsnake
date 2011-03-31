@@ -88,6 +88,13 @@ namespace DualSnake.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap PowerMeter {
+            get {
+                object obj = ResourceManager.GetObject("PowerMeter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap Them {
             get {
                 object obj = ResourceManager.GetObject("Them", resourceCulture);

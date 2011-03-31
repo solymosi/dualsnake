@@ -11,23 +11,33 @@ namespace DualSnake
     public partial class MainForm : Form
     {
         private Client Server;
+
         private List<Point> SnakeOne = new List<Point>();
         private List<Point> SnakeTwo = new List<Point>();
+
         private List<Point> Food = new List<Point>();
         private List<Point> Turbo = new List<Point>();
+
         int TurboCounter = 0;
+        int Me = 0;
+
         bool TurboEnabled = false;
         bool GameOver = false;
-        int Me = 0;
+
+        const int BlockWidth = 70;
+        const int BlockHeight = 40;
+        const int BlockDisplaySize = 10;
+        
         string Status = "";
 
         public MainForm()
         {
             InitializeComponent();
         }
+
         private void MainForm_Load(object sender, EventArgs e)
         {
-            this.ClientSize = new Size(500, 535);
+            this.ClientSize = new Size(BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize + 35);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
  
             Server = new Client();
@@ -89,65 +99,46 @@ namespace DualSnake
 
             if (e.Text.StartsWith("#Status "))
             {
-                lock (this)
-                {
-                    string[] pqq = e.Text.Substring(8).Split('\t');
-                    string fud = pqq[0];
-                    string t = pqq[1];
-                    string s1 = pqq[2];
-                    string s2 = pqq[3];
-                    TurboEnabled = pqq[4] == "E";
-                    TurboCounter = int.Parse(pqq[5]);
-                    Food.Clear();
-                    string[] Foods = fud.Split(new string[] { ";" }, StringSplitOptions.None);
-                    foreach (string FD in Foods)
-                    {
-                        string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
-                        Food.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                    }
-                    Turbo.Clear();
-                    string[] Turbos = t.Split(new string[] { ";" }, StringSplitOptions.None);
-                    foreach (string FD in Turbos)
-                    {
-                        string[] Parts = FD.Split(new string[] { "," }, StringSplitOptions.None);
-                        Turbo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                    }
-                    SnakeOne.Clear();
-                    string[] Points = s1.Split(new string[] { ";" }, StringSplitOptions.None);
-                    foreach (string P in Points)
-                    {
-                        string[] Parts = P.Split(new string[] { "," }, StringSplitOptions.None);
-                        SnakeOne.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                    }
-                    SnakeTwo.Clear();
-                    string[] pts = s2.Split(new string[] { ";" }, StringSplitOptions.None);
-                    foreach (string Q in pts)
-                    {
-                        string[] Parts = Q.Split(new string[] { "," }, StringSplitOptions.None);
-                        SnakeTwo.Add(new Point(int.Parse(Parts[0]), int.Parse(Parts[1])));
-                    }
-                }
+                string[] pqq = e.Text.Substring(8).Split('\t');
+                Food = FromRepresentation(pqq[0]);
+                Turbo = FromRepresentation(pqq[1]);
+                SnakeOne = FromRepresentation(pqq[2]);
+                SnakeTwo = FromRepresentation(pqq[3]);
+                TurboEnabled = pqq[4] == "E";
+                TurboCounter = int.Parse(pqq[5]);
+
                 SetStatus("TURBO: " + TurboCounter.ToString() + "     Press and hold SPACE to activate");
                 RePaint();
             }
         }
 
+        private List<Point> FromRepresentation(string Input)
+        {
+            List<Point> list = new List<Point>();
+            char[] chars = Input.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (i % 2 == 0) { list.Add(new Point(((int)chars[i]) - 20, ((int)chars[i + 1]) - 20)); }
+            }
+            return list;
+        }
+
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
-            Bitmap Temp = new Bitmap(500, 500, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            Bitmap Temp = new Bitmap(BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             Graphics GFX = Graphics.FromImage(Temp);
             GFX.Clear(Color.FromArgb(50, 50, 50));
             for (int i = 0; i < Food.Count; i++)
             {
-                GFX.FillRectangle(Brushes.Orange, new Rectangle(10 * (Food[i].Y - 1) + 2, 10 * (Food[i].X - 1) + 2, 10, 10));
+                GFX.FillRectangle(Brushes.Orange, new Rectangle(BlockDisplaySize * (Food[i].Y - 1), BlockDisplaySize * (Food[i].X - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < Turbo.Count; i++)
             {
-                GFX.FillRectangle(Brushes.Magenta, new Rectangle(10 * (Turbo[i].Y - 1) + 2, 10 * (Turbo[i].X - 1) + 2, 10, 10));
+                GFX.FillRectangle(Brushes.Magenta, new Rectangle(BlockDisplaySize * (Turbo[i].Y - 1), BlockDisplaySize * (Turbo[i].X - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < SnakeOne.Count; i++)
             {
-                GFX.FillRectangle(Me == 1 ? Brushes.LightGreen : Brushes.LightBlue, new Rectangle(10 * (SnakeOne[i].Y - 1) + 2, 10 * (SnakeOne[i].X - 1) + 2, 10, 10));
+                GFX.FillRectangle(Me == 1 ? Brushes.LightGreen : Brushes.LightBlue, new Rectangle(BlockDisplaySize * (SnakeOne[i].Y - 1), BlockDisplaySize * (SnakeOne[i].X - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < SnakeTwo.Count; i++)
             {
@@ -156,10 +147,10 @@ namespace DualSnake
                 {
                     if (p.X == SnakeTwo[i].X && p.Y == SnakeTwo[i].Y) { Yellow = true; }
                 }
-                GFX.FillRectangle(Yellow ? Brushes.Yellow : (Me == 2 ? Brushes.LightGreen : Brushes.LightBlue), new Rectangle(10 * (SnakeTwo[i].Y - 1) + 2, 10 * (SnakeTwo[i].X - 1) + 2, 10, 10));
+                GFX.FillRectangle(Yellow ? Brushes.Yellow : (Me == 2 ? Brushes.LightGreen : Brushes.LightBlue), new Rectangle(BlockDisplaySize * (SnakeTwo[i].Y - 1), BlockDisplaySize * (SnakeTwo[i].X - 1), BlockDisplaySize, BlockDisplaySize));
             }
             e.Graphics.DrawImage(Temp, 0, 0, Temp.Width, Temp.Height);
-            e.Graphics.DrawString(Status, new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.White, new PointF(10, 510));
+            e.Graphics.DrawString(Status, new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.White, new PointF(10, BlockHeight * BlockDisplaySize + 10));
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
@@ -174,16 +165,16 @@ namespace DualSnake
                 switch (e.KeyCode)
                 {
                     case Keys.Up:
-                        Server.Send("#D up");
+                        Server.Send("#D U");
                         break;
                     case Keys.Down:
-                        Server.Send("#D down");
+                        Server.Send("#D D");
                         break;
                     case Keys.Left:
-                        Server.Send("#D left");
+                        Server.Send("#D L");
                         break;
                     case Keys.Right:
-                        Server.Send("#D right");
+                        Server.Send("#D R");
                         break;
                     case Keys.Space:
                         Server.Send("#Turbo on");

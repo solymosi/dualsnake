@@ -15,8 +15,8 @@ namespace DualSnakeServer
         public const int TurboAmount = 20;
         public const int InitialFood = 2;
         public const int InitialTurbo = 2;
-        public const int BlockWidth = 50;
-        public const int BlockHeight = 50;
+        public const int BlockWidth = 70;
+        public const int BlockHeight = 40;
 
         public List<Point> Food = new List<Point>();
         public List<Point> Turbo = new List<Point>();
@@ -99,8 +99,8 @@ namespace DualSnakeServer
         {
             for (int i = 1; i <= StartLength; i++)
             {
-                Players.First().Snake.Add(new Point(BlockHeight / 2, i + 2));
-                Players.Last().Snake.Add(new Point(BlockHeight / 2, BlockWidth - i - 1));
+                Players.First().Snake.Add(new Point(i + 2, BlockHeight / 2));
+                Players.Last().Snake.Add(new Point(BlockWidth - i - 1, BlockHeight / 2));
             }
             Players.First().CurrentDirection = Direction.Right;
             Players.Last().CurrentDirection = Direction.Left;
@@ -204,10 +204,10 @@ namespace DualSnakeServer
             }
             switch (Player.CurrentDirection)
             {
-                case Direction.Right: NewHead.X = Head.X; NewHead.Y = Head.Y + 1; break;
-                case Direction.Left: NewHead.X = Head.X; NewHead.Y = Head.Y - 1; break;
-                case Direction.Up: NewHead.X = Head.X - 1; NewHead.Y = Head.Y; break;
-                case Direction.Down: NewHead.X = Head.X + 1; NewHead.Y = Head.Y; break;
+                case Direction.Right: NewHead.X = Head.X + 1; NewHead.Y = Head.Y; break;
+                case Direction.Left: NewHead.X = Head.X - 1; NewHead.Y = Head.Y; break;
+                case Direction.Up: NewHead.X = Head.X; NewHead.Y = Head.Y - 1; break;
+                case Direction.Down: NewHead.X = Head.X; NewHead.Y = Head.Y + 1; break;
             }
 
             bool Fail = false;
@@ -258,14 +258,20 @@ namespace DualSnakeServer
 
         protected void SendStatus()
         {
-            string F = string.Join(";", Food.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string T = string.Join(";", Turbo.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string S1 = string.Join(";", Players.First().Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-            string S2 = string.Join(";", Players.Last().Snake.Select<Point, string>(new Func<Point, string>(delegate(Point p) { return p.ToString(); })).ToArray());
-
-            string Status = "#Status " + F + "\t" + T + "\t" + S1 + "\t" + S2;
+            string Status = "#Status " + GetRepresentation(Food) + "\t" + GetRepresentation(Turbo) + "\t" + GetRepresentation(Players.First().Snake) + "\t" + GetRepresentation(Players.Last().Snake);
             Players.First().Send(Status + "\t" + (Players.First().TurboEnabled ? "E" : "D") + "\t" + Players.First().Turbo.ToString());
             Players.Last().Send(Status + "\t" + (Players.Last().TurboEnabled ? "E" : "D") + "\t" + Players.Last().Turbo.ToString());
+        }
+
+        protected string GetRepresentation(List<Point> PointList)
+        {
+            List<char> chars = new List<char>();
+            for (int i = 0; i < PointList.Count; i++)
+            {
+                chars.Add((char)(PointList[i].X + 20));
+                chars.Add((char)(PointList[i].Y + 20));
+            }
+            return new string(chars.ToArray());
         }
 
         protected void FinishGame(SnakePlayer Winner)
@@ -366,10 +372,10 @@ namespace DualSnakeServer
             {
                 switch (e.Text.Substring(3))
                 {
-                    case "up": this.NextDirection = Direction.Up; return;
-                    case "down": this.NextDirection = Direction.Down; return;
-                    case "left": this.NextDirection = Direction.Left; return;
-                    case "right": this.NextDirection = Direction.Right; return;
+                    case "U": this.NextDirection = Direction.Up; return;
+                    case "D": this.NextDirection = Direction.Down; return;
+                    case "L": this.NextDirection = Direction.Left; return;
+                    case "R": this.NextDirection = Direction.Right; return;
                 }
             }
 

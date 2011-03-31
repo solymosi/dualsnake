@@ -28,7 +28,21 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.AgainButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
+            // 
+            // AgainButton
+            // 
+            this.AgainButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.AgainButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.AgainButton.ForeColor = System.Drawing.Color.White;
+            this.AgainButton.Location = new System.Drawing.Point(393, 399);
+            this.AgainButton.Name = "AgainButton";
+            this.AgainButton.Size = new System.Drawing.Size(75, 35);
+            this.AgainButton.TabIndex = 0;
+            this.AgainButton.Text = "Again?";
+            this.AgainButton.UseVisualStyleBackColor = false;
+            this.AgainButton.Click += new System.EventHandler(this.AgainButton_Click);
             // 
             // MainForm
             // 
@@ -36,6 +50,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(467, 433);
+            this.Controls.Add(this.AgainButton);
             this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.ForeColor = System.Drawing.Color.White;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -55,6 +70,8 @@
         }
 
         #endregion
+
+        private System.Windows.Forms.Button AgainButton;
 
 
     }

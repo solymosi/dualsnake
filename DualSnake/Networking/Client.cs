@@ -234,7 +234,6 @@ namespace Solymosi.Networking.Sockets
         /// </summary>
         public void Receive()
         {
-            this.RequireConnection();
             try { this.Sock.BeginReceive(ReceiveBuffer, 0, ReceiveBuffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), new object()); }
             catch (Exception e) { this.Abort(e); }
         }

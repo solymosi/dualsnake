@@ -13,8 +13,8 @@ namespace DualSnakeServer
         public const int ClockInterval = 50;
         public const int CountdownDuration = 3;
         public const int TurboAmount = 20;
-        public const int InitialFood = 2;
-        public const int InitialTurbo = 2;
+        public const int InitialFood = 1;
+        public const int InitialTurbo = 3;
         public const int BlockWidth = 70;
         public const int BlockHeight = 40;
 

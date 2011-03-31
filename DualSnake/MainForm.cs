@@ -29,6 +29,7 @@ namespace DualSnake
         const int BlockDisplaySize = 10;
         
         string Status = "";
+        string ConnectTo = "";
 
         public MainForm()
         {
@@ -39,19 +40,44 @@ namespace DualSnake
         {
             this.ClientSize = new Size(BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize + 35);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
- 
+            AgainButton.Visible = false;
+            AgainButton.Enabled = false;
+            PopupConnectionDialog();
+        }
+
+        private void Connect()
+        {
+            AgainButton.Visible = false;
+            AgainButton.Enabled = false;
             Server = new Client();
             SetStatus("Connecting to server...");
-            Server.Connect("10.111.111.221", 1991);
+            Server.Connect(ConnectTo, 1991);
             Server.Received += new Client.ReceiveDelegate(Server_Received);
             Server.Connected += new Client.ConnectDelegate(delegate
             {
                 SetStatus("Connected to server. Waiting for an opponent to join...");
+                this.Invoke((MethodInvoker)delegate { AgainButton.Visible = false; AgainButton.Enabled = false; });
             });
             Server.Closed += new Client.CloseDelegate(delegate(object o, Client.CloseEventArgs ea)
             {
                 if (ea.Type == Client.CloseType.Dropped && !GameOver) { SetStatus("The server has dropped the connection :("); }
+                this.Invoke((MethodInvoker)delegate { AgainButton.Visible = true; AgainButton.Enabled = true; });
             });
+        }
+
+        private void PopupConnectionDialog()
+        {
+            ConnectForm CF = new ConnectForm();
+            CF.ConnectTo.Text = ConnectTo;
+            if (CF.ShowDialog() == DialogResult.OK)
+            {
+                ConnectTo = CF.ConnectTo.Text;
+                Connect();
+            }
+            else
+            {
+                this.Close();
+            }
         }
 
         private void SetStatus(string Message)
@@ -196,7 +222,12 @@ namespace DualSnake
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Server.Abort();
+            if (Server != null) { Server.Abort(); }
+        }
+
+        private void AgainButton_Click(object sender, EventArgs e)
+        {
+            PopupConnectionDialog();
         }
     }
     public class Point

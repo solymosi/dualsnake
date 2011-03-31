@@ -7,6 +7,10 @@ using System.Text;
 using System.Windows.Forms;
 using Solymosi.Networking.Sockets;
 using Microsoft.Win32;
+using Microsoft.DirectX;
+using Microsoft.DirectX.Direct3D;
+using System.Net.Sockets;
+
 namespace DualSnake
 {
     public partial class MainForm : Form
@@ -52,6 +56,7 @@ namespace DualSnake
             AgainButton.Visible = false;
             AgainButton.Enabled = false;
             Server = new Client();
+            Server.Socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
             SetStatus("Connecting to server...");
             Server.Connect(ConnectTo, 1991);
             Server.Received += new Client.ReceiveDelegate(Server_Received);
@@ -154,9 +159,8 @@ namespace DualSnake
 
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
-            Bitmap Temp = new Bitmap(BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            Graphics GFX = Graphics.FromImage(Temp);
-            GFX.Clear(Color.FromArgb(50, 50, 50));
+            Graphics GFX = e.Graphics;
+            GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(0, 0, BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize));
             for (int i = 0; i < Food.Count; i++)
             {
                 GFX.FillRectangle(Brushes.Orange, new Rectangle(BlockDisplaySize * (Food[i].X - 1), BlockDisplaySize * (Food[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
@@ -178,7 +182,6 @@ namespace DualSnake
                 }
                 GFX.FillRectangle(Yellow ? Brushes.Yellow : (Me == 2 ? Brushes.LightGreen : Brushes.LightBlue), new Rectangle(BlockDisplaySize * (SnakeTwo[i].X - 1), BlockDisplaySize * (SnakeTwo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
             }
-            e.Graphics.DrawImage(Temp, 0, 0, Temp.Width, Temp.Height);
             e.Graphics.DrawString(Status, new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.White, new PointF(10, BlockHeight * BlockDisplaySize + 10));
         }
 

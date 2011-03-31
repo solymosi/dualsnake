@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using Solymosi.Networking.Sockets;
+using Microsoft.Win32;
 namespace DualSnake
 {
     public partial class MainForm : Form
@@ -42,6 +43,7 @@ namespace DualSnake
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
             AgainButton.Visible = false;
             AgainButton.Enabled = false;
+            ConnectTo = (string)Registry.GetValue(@"HKEY_CURRENT_USER\Software\Solymosi\DualSnake", "LastIP", "");
             PopupConnectionDialog();
         }
 
@@ -72,6 +74,7 @@ namespace DualSnake
             if (CF.ShowDialog() == DialogResult.OK)
             {
                 ConnectTo = CF.ConnectTo.Text;
+                Registry.SetValue(@"HKEY_CURRENT_USER\Software\Solymosi\DualSnake", "LastIP", ConnectTo);
                 Connect();
             }
             else

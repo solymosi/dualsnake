@@ -40,12 +40,13 @@ namespace DualSnake
         {
             this.ClientSize = new Size(BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize + 35);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
-
+            AgainButton.Visible = false;
             PopupConnectionDialog();
         }
 
         private void Connect()
         {
+            AgainButton.Visible = false;
             Server = new Client();
             SetStatus("Connecting to server...");
             Server.Connect(ConnectTo, 1991);
@@ -53,10 +54,12 @@ namespace DualSnake
             Server.Connected += new Client.ConnectDelegate(delegate
             {
                 SetStatus("Connected to server. Waiting for an opponent to join...");
+                this.Invoke((MethodInvoker)delegate { AgainButton.Visible = false; });
             });
             Server.Closed += new Client.CloseDelegate(delegate(object o, Client.CloseEventArgs ea)
             {
                 if (ea.Type == Client.CloseType.Dropped && !GameOver) { SetStatus("The server has dropped the connection :("); }
+                this.Invoke((MethodInvoker)delegate { AgainButton.Visible = true; });
             });
         }
 
@@ -217,7 +220,12 @@ namespace DualSnake
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Server.Abort();
+            if (Server != null) { Server.Abort(); }
+        }
+
+        private void AgainButton_Click(object sender, EventArgs e)
+        {
+            PopupConnectionDialog();
         }
     }
     public class Point

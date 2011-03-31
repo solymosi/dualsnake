@@ -34,11 +34,12 @@
             // AgainButton
             // 
             this.AgainButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.AgainButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.AgainButton.BackColor = System.Drawing.Color.Maroon;
             this.AgainButton.ForeColor = System.Drawing.Color.White;
-            this.AgainButton.Location = new System.Drawing.Point(393, 399);
+            this.AgainButton.Location = new System.Drawing.Point(443, 566);
+            this.AgainButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.AgainButton.Name = "AgainButton";
-            this.AgainButton.Size = new System.Drawing.Size(75, 35);
+            this.AgainButton.Size = new System.Drawing.Size(103, 35);
             this.AgainButton.TabIndex = 0;
             this.AgainButton.Text = "Again?";
             this.AgainButton.UseVisualStyleBackColor = false;
@@ -46,15 +47,16 @@
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
-            this.ClientSize = new System.Drawing.Size(467, 433);
+            this.ClientSize = new System.Drawing.Size(545, 600);
             this.Controls.Add(this.AgainButton);
-            this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.Font = new System.Drawing.Font("Trebuchet MS", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.ForeColor = System.Drawing.Color.White;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.ShowIcon = false;

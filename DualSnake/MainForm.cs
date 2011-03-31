@@ -142,7 +142,7 @@ namespace DualSnake
                 TurboEnabled = pqq[4] == "E";
                 TurboCounter = int.Parse(pqq[5]);
 
-                SetStatus("TURBO: " + TurboCounter.ToString() + "     Press and hold SPACE to activate");
+                SetStatus("[TURBO]");
                 RePaint();
             }
         }
@@ -183,7 +183,16 @@ namespace DualSnake
                 }
                 GFX.FillRectangle(Both ? new TextureBrush(Resources.Both) : (Me == 2 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them)), new Rectangle(BlockDisplaySize * (SnakeTwo[i].X - 1), BlockDisplaySize * (SnakeTwo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
             }
-            e.Graphics.DrawString(Status, new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.White, new PointF(10, BlockHeight * BlockDisplaySize + 10));
+
+            if (Status == "[TURBO]")
+            {
+                GFX.DrawImage(Resources.TurboIcon, new PointF(15, BlockHeight * BlockDisplaySize + 3));
+                GFX.DrawString(TurboCounter.ToString(), new Font(new FontFamily("trebuchet ms"), 11, FontStyle.Bold), TurboCounter > 0 ? Brushes.Yellow : Brushes.Gray, new PointF(50, BlockHeight * BlockDisplaySize + 6));
+            }
+            else
+            {
+                GFX.DrawString(Status, new Font(new FontFamily("trebuchet ms"), 9, FontStyle.Bold), Brushes.White, new PointF(15, BlockHeight * BlockDisplaySize + 8));
+            }
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)

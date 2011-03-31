@@ -101,5 +101,12 @@ namespace DualSnake.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        internal static System.Drawing.Bitmap TurboIcon {
+            get {
+                object obj = ResourceManager.GetObject("TurboIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

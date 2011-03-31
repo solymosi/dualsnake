@@ -13,6 +13,7 @@ namespace DualSnakeServer
         public const int ClockInterval = 40;
         public const int CountdownDuration = 3;
         public const int TurboAmount = 20;
+        public const int MaxTurbo = 100;
         public const int InitialFood = 1;
         public const int InitialTurbo = 3;
         public const int BlockWidth = 70;
@@ -162,12 +163,14 @@ namespace DualSnakeServer
                 if (AtTurbo[0])
                 {
                     Players.First().Turbo += TurboAmount;
+                    if (Players.First().Turbo > MaxTurbo) { Players.First().Turbo = MaxTurbo; }
                     AteTurbo(Players.First().Head);
                     MessageLogged(this, new LogEventArgs("Player 1 ate a turbo"));
                 }
                 if (AtTurbo[1])
                 {
                     Players.Last().Turbo += TurboAmount;
+                    if (Players.Last().Turbo > MaxTurbo) { Players.Last().Turbo = MaxTurbo; }
                     AteTurbo(Players.Last().Head);
                     MessageLogged(this, new LogEventArgs("Player 2 ate a turbo"));
                 }
@@ -403,7 +406,7 @@ namespace DualSnakeServer
 
             if (e.Text == "#MaxTurbo")
             {
-                this.Turbo = 10000;
+                this.Turbo = 100;
             }
         }
     }

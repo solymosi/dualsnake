@@ -192,9 +192,16 @@ namespace DualSnakeServer
             Point Head = Player.Head;
             Point NewHead = new Point(0, 0);
 
-            if (Player.CurrentDirection != Player.NextDirection)
+            Direction NextDirection = Player.CurrentDirection;
+            if (Player.DirectionQueue.Count > 0)
             {
-                switch (Player.NextDirection)
+                NextDirection = Player.DirectionQueue.First();
+                Player.DirectionQueue.RemoveAt(0);
+            }
+
+            if (Player.CurrentDirection != NextDirection)
+            {
+                switch (NextDirection)
                 {
                     case Direction.Up: if (Player.CurrentDirection != Direction.Down) { Player.CurrentDirection = Direction.Up; } break;
                     case Direction.Down: if (Player.CurrentDirection != Direction.Up) { Player.CurrentDirection = Direction.Down; } break;
@@ -259,8 +266,12 @@ namespace DualSnakeServer
         protected void SendStatus()
         {
             string Status = "#Status " + GetRepresentation(Food) + "\t" + GetRepresentation(Turbo) + "\t" + GetRepresentation(Players.First().Snake) + "\t" + GetRepresentation(Players.Last().Snake);
-            Players.First().Send(Status + "\t" + (Players.First().TurboEnabled ? "E" : "D") + "\t" + Players.First().Turbo.ToString());
-            Players.Last().Send(Status + "\t" + (Players.Last().TurboEnabled ? "E" : "D") + "\t" + Players.Last().Turbo.ToString());
+            try
+            {
+                Players.First().Send(Status + "\t" + (Players.First().TurboEnabled ? "E" : "D") + "\t" + Players.First().Turbo.ToString());
+                Players.Last().Send(Status + "\t" + (Players.Last().TurboEnabled ? "E" : "D") + "\t" + Players.Last().Turbo.ToString());
+            }
+            catch { }
         }
 
         protected string GetRepresentation(List<Point> PointList)
@@ -351,7 +362,7 @@ namespace DualSnakeServer
     public class SnakePlayer : Client
     {
         public Direction CurrentDirection;
-        public Direction NextDirection;
+        public List<Direction> DirectionQueue = new List<Direction>();
 
         public SnakeGame Game;
         public List<Point> Snake = new List<Point>();
@@ -372,11 +383,12 @@ namespace DualSnakeServer
             {
                 switch (e.Text.Substring(3))
                 {
-                    case "U": this.NextDirection = Direction.Up; return;
-                    case "D": this.NextDirection = Direction.Down; return;
-                    case "L": this.NextDirection = Direction.Left; return;
-                    case "R": this.NextDirection = Direction.Right; return;
+                    case "U": DirectionQueue.Add(Direction.Up); break;
+                    case "D": DirectionQueue.Add(Direction.Down); break;
+                    case "L": DirectionQueue.Add(Direction.Left); break;
+                    case "R": DirectionQueue.Add(Direction.Right); break;
                 }
+                if (DirectionQueue.Count > 2) { DirectionQueue = DirectionQueue.Skip(DirectionQueue.Count - 2).Take(2).ToList(); }
             }
 
             if (e.Text == "#Turbo on")

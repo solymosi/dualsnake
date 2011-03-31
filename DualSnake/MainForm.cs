@@ -10,6 +10,7 @@ using Microsoft.Win32;
 using Microsoft.DirectX;
 using Microsoft.DirectX.Direct3D;
 using System.Net.Sockets;
+using DualSnake.Properties;
 
 namespace DualSnake
 {
@@ -163,24 +164,24 @@ namespace DualSnake
             GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(0, 0, BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize));
             for (int i = 0; i < Food.Count; i++)
             {
-                GFX.FillRectangle(Brushes.Orange, new Rectangle(BlockDisplaySize * (Food[i].X - 1), BlockDisplaySize * (Food[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
+                GFX.FillRectangle(new TextureBrush(Resources.Food), new Rectangle(BlockDisplaySize * (Food[i].X - 1), BlockDisplaySize * (Food[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < Turbo.Count; i++)
             {
-                GFX.FillRectangle(Brushes.Magenta, new Rectangle(BlockDisplaySize * (Turbo[i].X - 1), BlockDisplaySize * (Turbo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
+                GFX.FillRectangle(new TextureBrush(Resources.Turbo), new Rectangle(BlockDisplaySize * (Turbo[i].X - 1), BlockDisplaySize * (Turbo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < SnakeOne.Count; i++)
             {
-                GFX.FillRectangle(Me == 1 ? Brushes.LightGreen : Brushes.LightBlue, new Rectangle(BlockDisplaySize * (SnakeOne[i].X - 1), BlockDisplaySize * (SnakeOne[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
+                GFX.FillRectangle(Me == 1 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them), new Rectangle(BlockDisplaySize * (SnakeOne[i].X - 1), BlockDisplaySize * (SnakeOne[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < SnakeTwo.Count; i++)
             {
-                bool Yellow = false;
+                bool Both = false;
                 foreach (Point p in SnakeOne)
                 {
-                    if (p.X == SnakeTwo[i].X && p.Y == SnakeTwo[i].Y) { Yellow = true; }
+                    if (p.X == SnakeTwo[i].X && p.Y == SnakeTwo[i].Y) { Both = true; }
                 }
-                GFX.FillRectangle(Yellow ? Brushes.Yellow : (Me == 2 ? Brushes.LightGreen : Brushes.LightBlue), new Rectangle(BlockDisplaySize * (SnakeTwo[i].X - 1), BlockDisplaySize * (SnakeTwo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
+                GFX.FillRectangle(Both ? new TextureBrush(Resources.Both) : (Me == 2 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them)), new Rectangle(BlockDisplaySize * (SnakeTwo[i].X - 1), BlockDisplaySize * (SnakeTwo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
             }
             e.Graphics.DrawString(Status, new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.White, new PointF(10, BlockHeight * BlockDisplaySize + 10));
         }

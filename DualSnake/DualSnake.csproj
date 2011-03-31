@@ -86,7 +86,22 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Grass.bmp" />
+    <None Include="Resources\Turbo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Delay.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Me.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Them.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Food.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Both.png" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

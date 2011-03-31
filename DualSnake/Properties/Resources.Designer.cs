@@ -60,9 +60,44 @@ namespace DualSnake.Properties {
             }
         }
         
-        internal static System.Drawing.Bitmap Grass {
+        internal static System.Drawing.Bitmap Both {
             get {
-                object obj = ResourceManager.GetObject("Grass", resourceCulture);
+                object obj = ResourceManager.GetObject("Both", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Delay {
+            get {
+                object obj = ResourceManager.GetObject("Delay", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Food {
+            get {
+                object obj = ResourceManager.GetObject("Food", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Me {
+            get {
+                object obj = ResourceManager.GetObject("Me", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Them {
+            get {
+                object obj = ResourceManager.GetObject("Them", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Turbo {
+            get {
+                object obj = ResourceManager.GetObject("Turbo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

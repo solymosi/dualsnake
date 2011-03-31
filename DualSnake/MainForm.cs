@@ -11,23 +11,33 @@ namespace DualSnake
     public partial class MainForm : Form
     {
         private Client Server;
+
         private List<Point> SnakeOne = new List<Point>();
         private List<Point> SnakeTwo = new List<Point>();
+
         private List<Point> Food = new List<Point>();
         private List<Point> Turbo = new List<Point>();
+
         int TurboCounter = 0;
+        int Me = 0;
+
         bool TurboEnabled = false;
         bool GameOver = false;
-        int Me = 0;
+
+        const int BlockWidth = 70;
+        const int BlockHeight = 40;
+        const int BlockDisplaySize = 10;
+        
         string Status = "";
 
         public MainForm()
         {
             InitializeComponent();
         }
+
         private void MainForm_Load(object sender, EventArgs e)
         {
-            this.ClientSize = new Size(500, 535);
+            this.ClientSize = new Size(BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize + 35);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
  
             Server = new Client();
@@ -115,20 +125,20 @@ namespace DualSnake
 
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
-            Bitmap Temp = new Bitmap(500, 500, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            Bitmap Temp = new Bitmap(BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             Graphics GFX = Graphics.FromImage(Temp);
             GFX.Clear(Color.FromArgb(50, 50, 50));
             for (int i = 0; i < Food.Count; i++)
             {
-                GFX.FillRectangle(Brushes.Orange, new Rectangle(10 * (Food[i].Y - 1) + 2, 10 * (Food[i].X - 1) + 2, 10, 10));
+                GFX.FillRectangle(Brushes.Orange, new Rectangle(BlockDisplaySize * (Food[i].Y - 1), BlockDisplaySize * (Food[i].X - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < Turbo.Count; i++)
             {
-                GFX.FillRectangle(Brushes.Magenta, new Rectangle(10 * (Turbo[i].Y - 1) + 2, 10 * (Turbo[i].X - 1) + 2, 10, 10));
+                GFX.FillRectangle(Brushes.Magenta, new Rectangle(BlockDisplaySize * (Turbo[i].Y - 1), BlockDisplaySize * (Turbo[i].X - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < SnakeOne.Count; i++)
             {
-                GFX.FillRectangle(Me == 1 ? Brushes.LightGreen : Brushes.LightBlue, new Rectangle(10 * (SnakeOne[i].Y - 1) + 2, 10 * (SnakeOne[i].X - 1) + 2, 10, 10));
+                GFX.FillRectangle(Me == 1 ? Brushes.LightGreen : Brushes.LightBlue, new Rectangle(BlockDisplaySize * (SnakeOne[i].Y - 1), BlockDisplaySize * (SnakeOne[i].X - 1), BlockDisplaySize, BlockDisplaySize));
             }
             for (int i = 0; i < SnakeTwo.Count; i++)
             {
@@ -137,10 +147,10 @@ namespace DualSnake
                 {
                     if (p.X == SnakeTwo[i].X && p.Y == SnakeTwo[i].Y) { Yellow = true; }
                 }
-                GFX.FillRectangle(Yellow ? Brushes.Yellow : (Me == 2 ? Brushes.LightGreen : Brushes.LightBlue), new Rectangle(10 * (SnakeTwo[i].Y - 1) + 2, 10 * (SnakeTwo[i].X - 1) + 2, 10, 10));
+                GFX.FillRectangle(Yellow ? Brushes.Yellow : (Me == 2 ? Brushes.LightGreen : Brushes.LightBlue), new Rectangle(BlockDisplaySize * (SnakeTwo[i].Y - 1), BlockDisplaySize * (SnakeTwo[i].X - 1), BlockDisplaySize, BlockDisplaySize));
             }
             e.Graphics.DrawImage(Temp, 0, 0, Temp.Width, Temp.Height);
-            e.Graphics.DrawString(Status, new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.White, new PointF(10, 510));
+            e.Graphics.DrawString(Status, new Font(new FontFamily("trebuchet ms"), 8, FontStyle.Bold), Brushes.White, new PointF(10, BlockHeight * BlockDisplaySize + 10));
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)

@@ -10,7 +10,7 @@ namespace DualSnakeServer
     public class SnakeGame
     {
         public const int StartLength = 8;
-        public const int ClockInterval = 50;
+        public const int ClockInterval = 40;
         public const int CountdownDuration = 3;
         public const int TurboAmount = 20;
         public const int InitialFood = 1;

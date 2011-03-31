@@ -7,6 +7,9 @@ using System.Text;
 using System.Windows.Forms;
 using Solymosi.Networking.Sockets;
 using Microsoft.Win32;
+using Microsoft.DirectX;
+using Microsoft.DirectX.Direct3D;
+
 namespace DualSnake
 {
     public partial class MainForm : Form
@@ -32,6 +35,8 @@ namespace DualSnake
         string Status = "";
         string ConnectTo = "";
 
+        private Device Display;
+
         public MainForm()
         {
             InitializeComponent();
@@ -45,6 +50,16 @@ namespace DualSnake
             AgainButton.Enabled = false;
             ConnectTo = (string)Registry.GetValue(@"HKEY_CURRENT_USER\Software\Solymosi\DualSnake", "LastIP", "");
             PopupConnectionDialog();
+        }
+
+        public void InitGraphics()
+        {
+            PresentParameters Params = new PresentParameters();
+            Params.DeviceWindow = this;
+            Params.Windowed = true;
+            Params.SwapEffect = SwapEffect.Discard;
+
+            Display = new Device(0, DeviceType.Hardware, this, CreateFlags.SoftwareVertexProcessing, new PresentParameters[] { Params });
         }
 
         private void Connect()

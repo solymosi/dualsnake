@@ -48,6 +48,12 @@
     <Compile Include="ConnectForm.Designer.cs">
       <DependentUpon>ConnectForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="HelpForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HelpForm.Designer.cs">
+      <DependentUpon>HelpForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -59,6 +65,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="ConnectForm.resx">
       <DependentUpon>ConnectForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HelpForm.resx">
+      <DependentUpon>HelpForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
@@ -108,6 +118,24 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\PowerMeter.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HelpYourSnake.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HelpOpponentSnake.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HelpFood.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HelpWall.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HelpTurbo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HelpWin.png" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

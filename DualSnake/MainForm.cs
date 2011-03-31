@@ -250,6 +250,12 @@ namespace DualSnake
         {
             PopupConnectionDialog();
         }
+
+        private void MainForm_HelpButtonClicked(object sender, CancelEventArgs e)
+        {
+            new HelpForm().ShowDialog();
+            e.Cancel = true;
+        }
     }
     public class Point
     {

@@ -81,6 +81,48 @@ namespace DualSnake.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap HelpFood {
+            get {
+                object obj = ResourceManager.GetObject("HelpFood", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap HelpOpponentSnake {
+            get {
+                object obj = ResourceManager.GetObject("HelpOpponentSnake", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap HelpTurbo {
+            get {
+                object obj = ResourceManager.GetObject("HelpTurbo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap HelpWall {
+            get {
+                object obj = ResourceManager.GetObject("HelpWall", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap HelpWin {
+            get {
+                object obj = ResourceManager.GetObject("HelpWin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap HelpYourSnake {
+            get {
+                object obj = ResourceManager.GetObject("HelpYourSnake", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap Me {
             get {
                 object obj = ResourceManager.GetObject("Me", resourceCulture);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Solymosi.Networking.Sockets;
 using System.Net.Sockets;
+using System.IO;
 
 namespace DualSnakeServer
 {
@@ -11,9 +12,12 @@ namespace DualSnakeServer
         static public Server<SnakePlayer> Server = new Server<SnakePlayer>(1991);
         static public List<SnakeGame> Games = new List<SnakeGame>();
         static public int CurrentID = 0;
+        static public string Level;
 
         static void Main(string[] args)
         {
+            try { Level = File.ReadAllText("Default.level"); }
+            catch { Level = Tools.CreateDefaultLevel(SnakeGame.FieldWidth, SnakeGame.FieldHeight); }
             Server<SnakePlayer> Server = new Server<SnakePlayer>(1991);
             Server.Connected += new Server<SnakePlayer>.ConnectedDelegate(Server_Connected);
             Server.Listen();
@@ -32,7 +36,7 @@ namespace DualSnakeServer
             if (TargetGame == null)
             {
                 CurrentID++;
-                TargetGame = new SnakeGame();
+                TargetGame = new SnakeGame(Level);
                 TargetGame.AddPlayer(e.Client);
                 TargetGame.ID = CurrentID;
                 TargetGame.GameOver += new SnakeGame.GameOverDelegate(TargetGame_GameOver);

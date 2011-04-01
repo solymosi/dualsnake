@@ -20,6 +20,7 @@ namespace DualSnake
         private List<Point> SnakeOne = new List<Point>();
         private List<Point> SnakeTwo = new List<Point>();
 
+        private List<Point> Wall = new List<Point>();
         private List<Point> Food = new List<Point>();
         private List<Point> Turbo = new List<Point>();
 
@@ -172,12 +173,13 @@ namespace DualSnake
             if (e.Text.StartsWith("#Status "))
             {
                 string[] pqq = e.Text.Substring(8).Split('\t');
-                Food = FromRepresentation(pqq[0]);
-                Turbo = FromRepresentation(pqq[1]);
-                SnakeOne = FromRepresentation(pqq[2]);
-                SnakeTwo = FromRepresentation(pqq[3]);
-                TurboEnabled = pqq[4] == "E";
-                TurboCounter = int.Parse(pqq[5]);
+                Wall = FromRepresentation(pqq[0]);
+                Food = FromRepresentation(pqq[1]);
+                Turbo = FromRepresentation(pqq[2]);
+                SnakeOne = FromRepresentation(pqq[3]);
+                SnakeTwo = FromRepresentation(pqq[4]);
+                TurboEnabled = pqq[5] == "E";
+                TurboCounter = int.Parse(pqq[6]);
                 ClearStatus();
                 Draw = true;
                 RePaint();
@@ -207,6 +209,10 @@ namespace DualSnake
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
             e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
             GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(0, 0, FieldWidth * BlockSize, FieldHeight * BlockSize));
+            for (int i = 0; i < Wall.Count; i++)
+            {
+                GFX.FillRectangle(Brushes.Black, new Rectangle(BlockSize * (Wall[i].X - 1), BlockSize * (Wall[i].Y - 1), BlockSize, BlockSize));
+            }
             for (int i = 0; i < Food.Count; i++)
             {
                 GFX.FillRectangle(new TextureBrush(Resources.Food), new Rectangle(BlockSize * (Food[i].X - 1), BlockSize * (Food[i].Y - 1), BlockSize, BlockSize));

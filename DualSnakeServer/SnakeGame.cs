@@ -309,6 +309,7 @@ namespace DualSnakeServer
         {
             if (Aborting) { return; }
             Clock.Stop();
+            CountDown.Stop();
             this.Aborting = true;
             try
             {

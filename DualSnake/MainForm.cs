@@ -7,8 +7,6 @@ using System.Text;
 using System.Windows.Forms;
 using Solymosi.Networking.Sockets;
 using Microsoft.Win32;
-using Microsoft.DirectX;
-using Microsoft.DirectX.Direct3D;
 using System.Net.Sockets;
 using DualSnake.Properties;
 
@@ -78,12 +76,14 @@ namespace DualSnake
             Server.Received += new Client.ReceiveDelegate(Server_Received);
             Server.Connected += new Client.ConnectDelegate(delegate
             {
-                this.Invoke((MethodInvoker)delegate { AgainPanel.Visible = false; AgainButton.Enabled = false; });
+                try { Invoke((MethodInvoker)delegate { AgainPanel.Visible = false; AgainButton.Enabled = false; }); }
+                catch { }
             });
             Server.Closed += new Client.CloseDelegate(delegate(object o, Client.CloseEventArgs ea)
             {
                 if (!GameOver) { SetStatus("Connection failed", ErrorColor); }
-                this.Invoke((MethodInvoker)delegate { AgainPanel.Visible = true; AgainButton.Enabled = true; });
+                try { Invoke((MethodInvoker)delegate { AgainPanel.Visible = true; AgainButton.Enabled = true; }); }
+                catch { }
             });
         }
 
@@ -106,11 +106,15 @@ namespace DualSnake
         private void SetStatus(string Message) { SetStatus(Message, Color.Black); }
         private void SetStatus(string Message, Color Color)
         {
-            if (this.InvokeRequired) { this.Invoke((MethodInvoker)delegate { this.SetStatus(Message, Color); }); return; }
-            StatusLabel.Visible = true;
-            StatusLabel.Text = Message;
-            StatusLabel.BackColor = Color;
-            this.Refresh();
+            try
+            {
+                if (this.InvokeRequired) { this.Invoke((MethodInvoker)delegate { this.SetStatus(Message, Color); }); return; }
+                StatusLabel.Visible = true;
+                StatusLabel.Text = Message;
+                StatusLabel.BackColor = Color;
+                this.Refresh();
+            }
+            catch { }
         }
 
         private void ClearStatus()

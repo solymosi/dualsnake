@@ -9,25 +9,28 @@ namespace DualSnakeServer
 {
     public class SnakeGame
     {
-        public const int StartLength = 8;
         public const int ClockInterval = 40;
-        public const int CountdownDuration = 3;
-        public const int TurboAmount = 20;
-        public const int MaxTurbo = 100;
+        public const int GetReadyDuration = 3;
         public const int InitialFood = 1;
         public const int InitialTurbo = 3;
-        public const int BlockWidth = 70;
-        public const int BlockHeight = 40;
+        public const int TurboAmount = 20;
+        public const int MaxTurbo = 100;
+        public const int FieldWidth = 70;
+        public const int FieldHeight = 40;
 
         public List<Point> Food = new List<Point>();
         public List<Point> Turbo = new List<Point>();
+        public List<Point> Wall = new List<Point>();
 
         public List<SnakePlayer> Players = new List<SnakePlayer>(2);
+        public Point[] StartPoints = new Point[2];
+        public Direction[] StartDirections = new Direction[2];
 
         protected Timer Clock = new Timer();
         protected Timer CountDown = new Timer();
 
         public int ID = 0;
+        public int StartLength = 8;
 
         protected bool TurboRound = false;
         protected bool Aborting = false;
@@ -55,32 +58,73 @@ namespace DualSnakeServer
             }
         }
 
-        public SnakeGame(SnakePlayer FirstPlayer)
+        public SnakeGame() : this(Tools.CreateBlankLevel(FieldWidth, FieldHeight)) { }
+        public SnakeGame(string Level)
         {
-            AddPlayer(FirstPlayer);
-            Players.First().Send("#First");
-            MessageLogged(this, new LogEventArgs("First player connected"));
+            string[] Rows = Level.Split('\n').Select(new Func<string, string>(delegate(string start) { return start.TrimEnd(new char[] { '\r' }); })).Where(new Func<string, bool>(delegate(string w) { return w != ""; })).ToArray();
+            
+            string[] Info = Rows[0].Split('|').Select(new Func<string, string>(delegate(string start) { return start.Trim(); })).ToArray();
+            this.StartLength = int.Parse(Info[1]);
+            this.StartDirections[0] = Tools.ParseDirection(Info[2]);
+            this.StartDirections[1] = Tools.ParseDirection(Info[3]);
+
+            if (Rows.Length != FieldHeight + 1) { throw new ArgumentException(); }
+
+            for (int Row = 1; Row < Rows.Length; Row++)
+            {
+                for (int j = 0; j < FieldWidth; j++)
+                {
+                    int Column = j + 1;
+                    if (Rows[Row][j] == '%') { Wall.Add(new Point(Column, Row)); }
+                }
+            }
+
+            bool Second = false;
+            for (int Row = 1; Row < Rows.Length; Row++)
+            {
+                for (int j = 0; j < FieldWidth; j++)
+                {
+                    int Column = j + 1;
+                    if (new char[] { '1', '2' }.Contains(Rows[Row][j]))
+                    {
+                        int Index = Rows[Row][j] - 1;
+                        if (StartPoints[0] != null) { throw new ArgumentException(); }
+                        for (int i = 0; i < StartLength; i++)
+                        {
+                            switch (StartDirections[Index])
+                            {
+                                case Direction.Up: if (Row + i > FieldHeight || Wall.Any(new Func<Point, bool>(delegate(Point p) { return p.X == Column && p.Y == Row + i; })) || (Second ? StartPoints[1 - Index].Equals(new Point(Column, Row + i)) : false)) { throw new ArgumentException(); } break;
+                                case Direction.Down: if (Row - i < 1 || Wall.Any(new Func<Point, bool>(delegate(Point p) { return p.X == Column && p.Y == Row - i; })) || (Second ? StartPoints[1 - Index].Equals(new Point(Column, Row - i)) : false)) { throw new ArgumentException(); } break;
+                                case Direction.Left: if (Column + i > FieldWidth || Wall.Any(new Func<Point, bool>(delegate(Point p) { return p.X == Column + i && p.Y == Row; })) || (Second ? StartPoints[1 - Index].Equals(new Point(Column + i, Row)) : false)) { throw new ArgumentException(); } break;
+                                case Direction.Right: if (Column - i < 1 || Wall.Any(new Func<Point, bool>(delegate(Point p) { return p.X == Column - i && p.Y == Row; })) || (Second ? StartPoints[1 - Index].Equals(new Point(Column - i, Row)) : false)) { throw new ArgumentException(); } break;
+                            }
+                        }
+                        StartPoints[0] = new Point(Column, Row);
+                        Second = true;
+                    }
+                }
+            }
         }
 
-        public void AddSecondPlayer(SnakePlayer SecondPlayer)
+        public void AddPlayer(SnakePlayer Player)
         {
-            AddPlayer(SecondPlayer);
-            Players.Last().Send("#Second");
-            MessageLogged(this, new LogEventArgs("Second player connected"));
-            StartGame();
-        }
-
-        protected void AddPlayer(SnakePlayer Player)
-        {
+            if (Players.Count > 1) { throw new InvalidOperationException(); }
+            int Which = Players.Count + 1;
             Players.Add(Player);
             Player.Game = this;
             Player.Closed += new Client.CloseDelegate(AbortGame);
+            Player.Send("#Player " + Which.ToString());
+            MessageLogged(this, new LogEventArgs((Which == 1 ? "First" : "Second") + " player connected"));
+            if (Players.Count == 2)
+            {
+                StartGame();
+            }
         }
 
         protected void StartGame()
         {
-            Send("#Countdown " + CountdownDuration.ToString());
-            CountDown.Interval = CountdownDuration * 1000;
+            Send("#Countdown " + GetReadyDuration.ToString());
+            CountDown.Interval = GetReadyDuration * 1000;
             CountDown.Elapsed += new ElapsedEventHandler(delegate
             {
                 CountDown.Stop();
@@ -93,15 +137,15 @@ namespace DualSnakeServer
                 MessageLogged(this, new LogEventArgs("Game started"));
             });
             CountDown.Start();
-            MessageLogged(this, new LogEventArgs("Starting game in " + CountdownDuration.ToString() + " seconds"));
+            MessageLogged(this, new LogEventArgs("Starting game in " + GetReadyDuration.ToString() + " seconds"));
         }
 
         public void CreateSnakes()
         {
             for (int i = 1; i <= StartLength; i++)
             {
-                Players.First().Snake.Add(new Point(i + 2, BlockHeight / 2));
-                Players.Last().Snake.Add(new Point(BlockWidth - i - 1, BlockHeight / 2));
+                Players.First().Snake.Add(new Point(i + 2, FieldHeight / 2));
+                Players.Last().Snake.Add(new Point(FieldWidth - i - 1, FieldHeight / 2));
             }
             Players.First().CurrentDirection = Direction.Right;
             Players.Last().CurrentDirection = Direction.Left;
@@ -225,7 +269,7 @@ namespace DualSnakeServer
             {
                 if ((Player.Snake[i].X == NewHead.X) && (Player.Snake[i].Y == NewHead.Y)) { Fail = true; }
             }
-            if (NewHead.X < 1 || NewHead.X > BlockWidth || NewHead.Y < 1 || NewHead.Y > BlockHeight) { Fail = true; }
+            if (NewHead.X < 1 || NewHead.X > FieldWidth || NewHead.Y < 1 || NewHead.Y > FieldHeight) { Fail = true; }
             if (Fail) { throw new InvalidOperationException(); }
 
             Player.Snake.Add(NewHead);
@@ -342,8 +386,8 @@ namespace DualSnakeServer
             int X = 0, Y = 0;
             do
             {
-                X = Tools.Random.Next(2, BlockWidth);
-                Y = Tools.Random.Next(2, BlockHeight);
+                X = Tools.Random.Next(2, FieldWidth);
+                Y = Tools.Random.Next(2, FieldHeight);
                 if (Food.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Turbo.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Players.First().Snake.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
@@ -431,6 +475,29 @@ namespace DualSnakeServer
     public static class Tools
     {
         public static Random Random = new Random();
+
+        public static string CreateBlankLevel(int Width, int Height)
+        {
+            string BlankLevel = "Blank level | 8 | Right | Left\n";
+            for (int i = 0; i < Height; i++)
+            {
+                for (int j = 0; j < Width; j++) { BlankLevel += " "; }
+                BlankLevel += "\n";
+            }
+            return BlankLevel;
+        }
+
+        public static Direction ParseDirection(string Input)
+        {
+            switch (Input.ToLower())
+            {
+                case "up": return Direction.Up;
+                case "down": return Direction.Down;
+                case "left": return Direction.Left;
+                case "right": return Direction.Right;
+            }
+            throw new ArgumentException();
+        }
     }
 
     public class Point

@@ -29,9 +29,9 @@ namespace DualSnake
         bool TurboEnabled = false;
         bool GameOver = false;
 
-        const int BlockWidth = 70;
-        const int BlockHeight = 40;
-        const int BlockDisplaySize = 10;
+        const int FieldWidth = 70;
+        const int FieldHeight = 40;
+        const int BlockSize = 10;
 
         Color ErrorColor = Color.FromArgb(150, 128, 0, 0);
         Color WarningColor = Color.FromArgb(150, 128, 64, 0);
@@ -48,7 +48,7 @@ namespace DualSnake
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            this.ClientSize = new Size(BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize + 60);
+            this.ClientSize = new Size(FieldWidth * BlockSize, FieldHeight * BlockSize + 60);
             this.Left = Screen.PrimaryScreen.WorkingArea.Width / 2 - this.Width / 2;
             this.Top = Screen.PrimaryScreen.WorkingArea.Height / 2 - this.Height / 2;
             this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
@@ -60,7 +60,7 @@ namespace DualSnake
             AgainButton.Left = this.Width / 2 - AgainButton.Width / 2;
             StatusLabel.Left = 0;
             StatusLabel.Width = this.Width;
-            StatusLabel.Top = BlockHeight * BlockDisplaySize / 2 - StatusLabel.Height / 2;
+            StatusLabel.Top = FieldHeight * BlockSize / 2 - StatusLabel.Height / 2;
             ConnectTo = (string)Registry.GetValue(@"HKEY_CURRENT_USER\Software\Solymosi\DualSnake", "LastIP", "");
             PopupConnectionDialog();
         }
@@ -132,15 +132,10 @@ namespace DualSnake
 
         void Server_Received(object sender, Client.TransmitEventArgs e)
         {
-            if (e.Text == "#First")
+            if (e.Text.StartsWith("#Player "))
             {
-                Me = 1;
-                SetStatus("Waiting for an opponent...");
-            }
-
-            if (e.Text == "#Second")
-            {
-                Me = 2;
+                Me = int.Parse(e.Text.Substring(8));
+                if (Me == 1) { SetStatus("Waiting for an opponent..."); }
             }
 
             if (e.Text.StartsWith("#Countdown "))
@@ -211,18 +206,18 @@ namespace DualSnake
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
             e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
-            GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(0, 0, BlockWidth * BlockDisplaySize, BlockHeight * BlockDisplaySize));
+            GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(0, 0, FieldWidth * BlockSize, FieldHeight * BlockSize));
             for (int i = 0; i < Food.Count; i++)
             {
-                GFX.FillRectangle(new TextureBrush(Resources.Food), new Rectangle(BlockDisplaySize * (Food[i].X - 1), BlockDisplaySize * (Food[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
+                GFX.FillRectangle(new TextureBrush(Resources.Food), new Rectangle(BlockSize * (Food[i].X - 1), BlockSize * (Food[i].Y - 1), BlockSize, BlockSize));
             }
             for (int i = 0; i < Turbo.Count; i++)
             {
-                GFX.FillRectangle(new TextureBrush(Resources.Turbo), new Rectangle(BlockDisplaySize * (Turbo[i].X - 1), BlockDisplaySize * (Turbo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
+                GFX.FillRectangle(new TextureBrush(Resources.Turbo), new Rectangle(BlockSize * (Turbo[i].X - 1), BlockSize * (Turbo[i].Y - 1), BlockSize, BlockSize));
             }
             for (int i = 0; i < SnakeOne.Count; i++)
             {
-                GFX.FillRectangle(Me == 1 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them), new Rectangle(BlockDisplaySize * (SnakeOne[i].X - 1), BlockDisplaySize * (SnakeOne[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
+                GFX.FillRectangle(Me == 1 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them), new Rectangle(BlockSize * (SnakeOne[i].X - 1), BlockSize * (SnakeOne[i].Y - 1), BlockSize, BlockSize));
             }
             for (int i = 0; i < SnakeTwo.Count; i++)
             {
@@ -231,13 +226,13 @@ namespace DualSnake
                 {
                     if (p.X == SnakeTwo[i].X && p.Y == SnakeTwo[i].Y) { Both = true; }
                 }
-                GFX.FillRectangle(Both ? new TextureBrush(Resources.Both) : (Me == 2 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them)), new Rectangle(BlockDisplaySize * (SnakeTwo[i].X - 1), BlockDisplaySize * (SnakeTwo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
+                GFX.FillRectangle(Both ? new TextureBrush(Resources.Both) : (Me == 2 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them)), new Rectangle(BlockSize * (SnakeTwo[i].X - 1), BlockSize * (SnakeTwo[i].Y - 1), BlockSize, BlockSize));
             }
 
-            GFX.DrawImage(Resources.TurboIcon, new PointF(15, BlockHeight * BlockDisplaySize + 15));
-            GFX.DrawRectangle(new Pen(Color.FromArgb(170, 106, 0)), new Rectangle(55, BlockHeight * BlockDisplaySize + 19, 201, 21));
-            GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(56, BlockHeight * BlockDisplaySize + 20, 200, 20));
-            GFX.DrawImageUnscaledAndClipped(Resources.PowerMeter, new Rectangle(56, BlockHeight * BlockDisplaySize + 20, TurboCounter * 2, 20));
+            GFX.DrawImage(Resources.TurboIcon, new PointF(15, FieldHeight * BlockSize + 15));
+            GFX.DrawRectangle(new Pen(Color.FromArgb(170, 106, 0)), new Rectangle(55, FieldHeight * BlockSize + 19, 201, 21));
+            GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(56, FieldHeight * BlockSize + 20, 200, 20));
+            GFX.DrawImageUnscaledAndClipped(Resources.PowerMeter, new Rectangle(56, FieldHeight * BlockSize + 20, TurboCounter * 2, 20));
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)

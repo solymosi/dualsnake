@@ -32,7 +32,8 @@ namespace DualSnakeServer
             if (TargetGame == null)
             {
                 CurrentID++;
-                TargetGame = new SnakeGame(e.Client);
+                TargetGame = new SnakeGame();
+                TargetGame.AddPlayer(e.Client);
                 TargetGame.ID = CurrentID;
                 TargetGame.GameOver += new SnakeGame.GameOverDelegate(TargetGame_GameOver);
                 TargetGame.MessageLogged += new SnakeGame.LogMessageDelegate(TargetGame_MessageLogged);
@@ -41,7 +42,7 @@ namespace DualSnakeServer
             }
             else
             {
-                TargetGame.AddSecondPlayer(e.Client);
+                TargetGame.AddPlayer(e.Client);
             }
         }
 

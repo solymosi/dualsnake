@@ -23,6 +23,7 @@ namespace DualSnake
         private List<Point> Wall = new List<Point>();
         private List<Point> Food = new List<Point>();
         private List<Point> Turbo = new List<Point>();
+        private List<Point> Delay = new List<Point>();
 
         int TurboCounter = 0;
         int Me = 0;
@@ -176,10 +177,11 @@ namespace DualSnake
                 Wall = FromRepresentation(pqq[0]);
                 Food = FromRepresentation(pqq[1]);
                 Turbo = FromRepresentation(pqq[2]);
-                SnakeOne = FromRepresentation(pqq[3]);
-                SnakeTwo = FromRepresentation(pqq[4]);
-                TurboEnabled = pqq[5] == "E";
-                TurboCounter = int.Parse(pqq[6]);
+                Delay = FromRepresentation(pqq[3]);
+                SnakeOne = FromRepresentation(pqq[4]);
+                SnakeTwo = FromRepresentation(pqq[5]);
+                TurboEnabled = pqq[6] == "E";
+                TurboCounter = int.Parse(pqq[7]);
                 ClearStatus();
                 Draw = true;
                 RePaint();
@@ -220,6 +222,10 @@ namespace DualSnake
             for (int i = 0; i < Turbo.Count; i++)
             {
                 GFX.FillRectangle(new TextureBrush(Resources.Turbo), new Rectangle(BlockSize * (Turbo[i].X - 1), BlockSize * (Turbo[i].Y - 1), BlockSize, BlockSize));
+            }
+            for (int i = 0; i < Delay.Count; i++)
+            {
+                GFX.FillRectangle(new TextureBrush(Resources.Delay), new Rectangle(BlockSize * (Delay[i].X - 1), BlockSize * (Delay[i].Y - 1), BlockSize, BlockSize));
             }
             for (int i = 0; i < SnakeOne.Count; i++)
             {

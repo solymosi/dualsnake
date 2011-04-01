@@ -15,12 +15,16 @@ namespace DualSnakeServer
         public const int InitialTurbo = 3;
         public const int TurboAmount = 20;
         public const int MaxTurbo = 100;
+        public const int InitialDelay = 2;
+        public const int DelayAmount = 50;
         public const int FieldWidth = 70;
         public const int FieldHeight = 40;
 
         public SnakeMap Map;
+
         public List<Point> Food = new List<Point>();
         public List<Point> Turbo = new List<Point>();
+        public List<Point> Delay = new List<Point>();
 
         public List<SnakePlayer> Players = new List<SnakePlayer>(2);
 
@@ -91,6 +95,7 @@ namespace DualSnakeServer
                 CreateSnakes();
                 for (int i = 0; i < InitialFood; i++) { PlaceFood(); }
                 for (int i = 0; i < InitialTurbo; i++) { PlaceTurbo(); }
+                for (int i = 0; i < InitialDelay; i++) { PlaceDelay(); }
                 Clock.Interval = ClockInterval;
                 Clock.Elapsed += new ElapsedEventHandler(Clock_Elapsed);
                 Clock.Start();
@@ -131,6 +136,7 @@ namespace DualSnakeServer
             bool[] Fail = new bool[2];
             bool[] AtFood = new bool[2];
             bool[] AtTurbo = new bool[2];
+            bool[] AtDelay = new bool[2];
 
             try { NextMove(Players.First()); }
             catch (InvalidOperationException) { Fail[0] = true; }
@@ -152,14 +158,14 @@ namespace DualSnakeServer
                     AteFood(Players.First().Head);
                     MessageLogged(this, new LogEventArgs("Player 1 ate a food"));
                 }
-                else { if (!TurboRound || Players.First().TurboEnabled) { Players.First().Snake.RemoveAt(0); } }
+                else { if (Players.First().Delay == 0 && (!TurboRound || Players.First().TurboEnabled)) { Players.First().Snake.RemoveAt(0); } }
                 if (AtFood[1])
                 {
                     Players.First().Snake.RemoveAt(0);
                     AteFood(Players.Last().Head);
                     MessageLogged(this, new LogEventArgs("Player 2 ate a food"));
                 }
-                else { if (!TurboRound || Players.Last().TurboEnabled) { Players.Last().Snake.RemoveAt(0); } }
+                else { if (Players.Last().Delay == 0 && (!TurboRound || Players.Last().TurboEnabled)) { Players.Last().Snake.RemoveAt(0); } }
                 if (Players.First().Snake.Count < 1) { Fail[0] = true; }
                 if (Players.Last().Snake.Count < 1) { Fail[1] = true; }
             }
@@ -195,11 +201,32 @@ namespace DualSnakeServer
 
             foreach (SnakePlayer P in Players)
             {
-                if (P.TurboEnabled)
+                if (P.TurboEnabled && P.Delay == 0)
                 {
                     P.Turbo--;
                     if (P.Turbo <= 0) { P.Turbo = 0; P.TurboEnabled = false; }
                 }
+            }
+
+            AtDelay[0] = IsAtDelay(Players.First());
+            AtDelay[1] = IsAtDelay(Players.Last());
+
+            if (AtDelay[0])
+            {
+                Players.Last().Delay += DelayAmount;
+                AteDelay(Players.First().Head);
+                MessageLogged(this, new LogEventArgs("Player 1 delayed Player 2"));
+            }
+            if (AtDelay[1])
+            {
+                Players.First().Delay += DelayAmount;
+                AteDelay(Players.Last().Head);
+                MessageLogged(this, new LogEventArgs("Player 2 delayed Player 1"));
+            }
+
+            foreach (SnakePlayer P in Players)
+            {
+                if (P.Delay > 0) { P.Delay--; }
             }
 
             SendStatus();
@@ -208,6 +235,7 @@ namespace DualSnakeServer
         protected void NextMove(SnakePlayer Player)
         {
             if (TurboRound && !Player.TurboEnabled) { return; }
+            if (Player.Delay > 0) { return; }
 
             Point Head = Player.Head;
             Point NewHead = new Point(0, 0);
@@ -265,6 +293,12 @@ namespace DualSnakeServer
             return false;
         }
 
+        protected bool IsAtDelay(SnakePlayer Player)
+        {
+            foreach (Point D in Delay) { if (D.X == Player.Head.X && D.Y == Player.Head.Y) { return true; } }
+            return false;
+        }
+
         protected void AteFood(Point Which)
         {
             RemoveFromPointList(Food, Which);
@@ -275,6 +309,12 @@ namespace DualSnakeServer
         {
             RemoveFromPointList(Turbo, Which);
             PlaceTurbo();
+        }
+
+        protected void AteDelay(Point Which)
+        {
+            RemoveFromPointList(Delay, Which);
+            PlaceDelay();
         }
 
         protected void RemoveFromPointList(List<Point> List, Point What)
@@ -290,7 +330,7 @@ namespace DualSnakeServer
 
         protected void SendStatus()
         {
-            string Status = "#Status " + GetRepresentation(Map.Walls) + "\t" + GetRepresentation(Food) + "\t" + GetRepresentation(Turbo) + "\t" + GetRepresentation(Players.First().Snake) + "\t" + GetRepresentation(Players.Last().Snake);
+            string Status = "#Status " + GetRepresentation(Map.Walls) + "\t" + GetRepresentation(Food) + "\t" + GetRepresentation(Turbo) + "\t" + GetRepresentation(Delay) + "\t" + GetRepresentation(Players.First().Snake) + "\t" + GetRepresentation(Players.Last().Snake);
             try
             {
                 Players.First().Send(Status + "\t" + (Players.First().TurboEnabled ? "E" : "D") + "\t" + Players.First().Turbo.ToString());
@@ -368,6 +408,7 @@ namespace DualSnakeServer
                 Y = Tools.Random.Next(1, FieldHeight + 1);
                 if (Food.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Turbo.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
+                if (Delay.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Map.Walls.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Players.First().Snake.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Players.Last().Snake.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
@@ -384,6 +425,11 @@ namespace DualSnakeServer
         {
             Turbo.Add(FreePoint());
         }
+
+        public void PlaceDelay()
+        {
+            Delay.Add(FreePoint());
+        }
     }
 
     public class SnakePlayer : Client
@@ -394,6 +440,7 @@ namespace DualSnakeServer
         public SnakeGame Game;
         public List<Point> Snake = new List<Point>();
 
+        public int Delay = 0;
         public int Turbo = 0;
         public bool TurboEnabled = false;
 

@@ -44,7 +44,7 @@ namespace DualSnakeServer
             string Input = "";
             SnakeMap LoadedMap;
             Console.WriteLine("Loading map " + F + "...");
-            try { Input = File.ReadAllText(Input); }
+            try { Input = File.ReadAllText(F); }
             catch
             {
                 Console.WriteLine("Could not load " + F + ". Make sure the file exists and it is readable.");
@@ -56,6 +56,7 @@ namespace DualSnakeServer
                 Console.WriteLine("The map " + F + " contains errors. Fix them and try again.");
                 throw new Exception();
             }
+            Console.WriteLine("Map loaded successfully.");
             Map = LoadedMap;
         }
 

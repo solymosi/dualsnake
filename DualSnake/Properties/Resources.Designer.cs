@@ -81,6 +81,13 @@ namespace DualSnake.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap HelpDelay {
+            get {
+                object obj = ResourceManager.GetObject("HelpDelay", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap HelpFood {
             get {
                 object obj = ResourceManager.GetObject("HelpFood", resourceCulture);

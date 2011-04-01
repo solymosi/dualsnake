@@ -256,6 +256,11 @@ namespace DualSnake
                 this.Close();
                 return;
             }
+            if (e.KeyCode == Keys.F1)
+            {
+                MainForm_HelpButtonClicked(this, new CancelEventArgs());
+                return;
+            }
             if (Server.IsConnected)
             {
                 switch (e.KeyCode)

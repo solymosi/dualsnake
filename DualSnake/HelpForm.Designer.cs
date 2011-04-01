@@ -31,13 +31,16 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.pictureBox7 = new System.Windows.Forms.PictureBox();
             this.pictureBox6 = new System.Windows.Forms.PictureBox();
             this.pictureBox5 = new System.Windows.Forms.PictureBox();
             this.pictureBox4 = new System.Windows.Forms.PictureBox();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.label7 = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox7)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox6)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
@@ -100,10 +103,37 @@
                 "";
             this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // label7
+            // 
+            this.label7.Location = new System.Drawing.Point(53, 288);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(337, 40);
+            this.label7.TabIndex = 14;
+            this.label7.Text = "You win if your opponent gets too short or hits a wall. Have fun!";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // label8
+            // 
+            this.label8.Location = new System.Drawing.Point(53, 242);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(337, 40);
+            this.label8.TabIndex = 18;
+            this.label8.Text = "These freeze the other snake for a few seconds.";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // pictureBox7
+            // 
+            this.pictureBox7.Image = global::DualSnake.Properties.Resources.HelpDelay;
+            this.pictureBox7.Location = new System.Drawing.Point(12, 242);
+            this.pictureBox7.Name = "pictureBox7";
+            this.pictureBox7.Size = new System.Drawing.Size(30, 40);
+            this.pictureBox7.TabIndex = 17;
+            this.pictureBox7.TabStop = false;
+            // 
             // pictureBox6
             // 
             this.pictureBox6.Image = global::DualSnake.Properties.Resources.HelpWin;
-            this.pictureBox6.Location = new System.Drawing.Point(12, 242);
+            this.pictureBox6.Location = new System.Drawing.Point(12, 288);
             this.pictureBox6.Name = "pictureBox6";
             this.pictureBox6.Size = new System.Drawing.Size(30, 40);
             this.pictureBox6.TabIndex = 13;
@@ -154,21 +184,14 @@
             this.pictureBox1.TabIndex = 3;
             this.pictureBox1.TabStop = false;
             // 
-            // label7
-            // 
-            this.label7.Location = new System.Drawing.Point(53, 242);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(337, 40);
-            this.label7.TabIndex = 14;
-            this.label7.Text = "You win if your opponent gets too short or hits a wall. Have fun!";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
             // HelpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.ClientSize = new System.Drawing.Size(402, 304);
+            this.ClientSize = new System.Drawing.Size(402, 350);
+            this.Controls.Add(this.label8);
+            this.Controls.Add(this.pictureBox7);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.pictureBox6);
             this.Controls.Add(this.label6);
@@ -195,6 +218,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "DualSnake Help";
             this.Load += new System.EventHandler(this.HelpForm_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.HelpForm_KeyDown);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox7)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox6)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox5)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).EndInit();
@@ -221,5 +246,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.PictureBox pictureBox6;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.PictureBox pictureBox7;
     }
 }

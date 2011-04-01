@@ -364,8 +364,8 @@ namespace DualSnakeServer
             int X = 0, Y = 0;
             do
             {
-                X = Tools.Random.Next(2, FieldWidth);
-                Y = Tools.Random.Next(2, FieldHeight);
+                X = Tools.Random.Next(1, FieldWidth + 1);
+                Y = Tools.Random.Next(1, FieldHeight + 1);
                 if (Food.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Turbo.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Map.Walls.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }

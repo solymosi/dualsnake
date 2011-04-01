@@ -18,19 +18,16 @@ namespace DualSnakeServer
         public const int FieldWidth = 70;
         public const int FieldHeight = 40;
 
+        public SnakeMap Map;
         public List<Point> Food = new List<Point>();
         public List<Point> Turbo = new List<Point>();
-        public List<Point> Wall = new List<Point>();
 
         public List<SnakePlayer> Players = new List<SnakePlayer>(2);
-        public Point[] StartPoints = new Point[2];
-        public Direction[] StartDirections = new Direction[2];
 
         protected Timer Clock = new Timer();
         protected Timer CountDown = new Timer();
 
         public int ID = 0;
-        public int StartLength = 8;
 
         protected bool TurboRound = false;
         protected bool Aborting = false;
@@ -58,73 +55,15 @@ namespace DualSnakeServer
             }
         }
 
-        public SnakeGame() : this(Tools.CreateDefaultLevel(FieldWidth, FieldHeight)) { }
-        public SnakeGame(string Level)
+        public SnakeGame() : this(Tools.CreateDefaultMap(FieldWidth, FieldHeight)) { }
+        public SnakeGame(SnakeMap Map)
         {
-            string[] Rows = Level.Split('\n').Select(new Func<string, string>(delegate(string start) { return start.TrimEnd(new char[] { '\r' }); })).Where(new Func<string, bool>(delegate(string w) { return w != ""; })).ToArray();
-            
-            string[] Info = Rows[0].Split('|').Select(new Func<string, string>(delegate(string start) { return start.Trim(); })).ToArray();
-            this.StartLength = int.Parse(Info[1]);
-            this.StartDirections[0] = Tools.ParseDirection(Info[2]);
-            this.StartDirections[1] = Tools.ParseDirection(Info[3]);
-
-            if (Rows.Length != FieldHeight + 1) { throw new ArgumentException(); }
-
-            for (int Row = 1; Row < Rows.Length; Row++)
-            {
-                for (int j = 0; j < FieldWidth; j++)
-                {
-                    int Column = j + 1;
-                    if (Rows[Row][j] == '%') { Wall.Add(new Point(Column, Row)); }
-                }
-            }
-
-            int Count = 0;
-            for (int Row = 1; Row < Rows.Length; Row++)
-            {
-                for (int j = 0; j < FieldWidth; j++)
-                {
-                    int Column = j + 1;
-                    if (new char[] { '1', '2' }.Contains(Rows[Row][j]))
-                    {
-                        Count++;
-                        if (Count > 2) { throw new ArgumentException(); }
-                        int Index = Rows[Row][j] == '1' ? 0 : 1;
-                        if (StartPoints[Index] != null) { throw new ArgumentException(); }
-                        for (int i = 0; i < StartLength; i++)
-                        {
-                            Point MP;
-                            switch (StartDirections[Index])
-                            {
-                                case Direction.Up: MP = new Point(Column, Row+i); break;
-                                case Direction.Down: MP = new Point(Column, Row-i); break;
-                                case Direction.Left: MP = new Point(Column + i, Row); break;
-                                case Direction.Right: MP = new Point(Column - i, Row); break;
-                                default: throw new ArgumentException();
-                            }
-                            MP = ModPoint(MP);
-                            if (Wall.Any(new Func<Point, bool>(delegate(Point p) { return p.X == MP.X && p.Y == MP.Y; })) || (Count > 1 ? StartPoints[1 - Index].Equals(MP) : false))
-                            {
-                                throw new ArgumentException();
-                            }
-                        }
-                        StartPoints[Index] = new Point(Column, Row);
-                    }
-                }
-            }
-
-            if (StartPoints[0] == null || StartPoints[1] == null) { throw new ArgumentException(); }
+            this.Map = Map;
         }
 
         private Point ModPoint(Point p)
         {
-            Point q = new Point(0, 0);
-            q.X = p.X; q.Y = p.Y;
-            if (q.X < 1) { q.X = q.X % FieldWidth + FieldWidth; }
-            if (q.X > FieldWidth) { q.X %= FieldWidth; }
-            if (q.Y < 1) { q.Y = q.Y % FieldHeight + FieldHeight; }
-            if (q.Y > FieldHeight) { q.Y %= FieldHeight; }
-            return q;
+            return Tools.ModPoint(p, FieldWidth, FieldHeight);
         }
 
         public void AddPlayer(SnakePlayer Player)
@@ -165,11 +104,11 @@ namespace DualSnakeServer
         {
             for (int Index = 0; Index < 2; Index++)
             {
-                Point P = StartPoints[Index];
-                for (int i = 0; i < StartLength; i++)
+                Point P = new Point(Map.StartLocation[Index].X, Map.StartLocation[Index].Y);
+                for (int i = 0; i < Map.StartLength; i++)
                 {
                     (Index == 0 ? Players.First() : Players.Last()).Snake.Add(new Point(P.X, P.Y));
-                    switch (StartDirections[Index])
+                    switch (Map.StartDirection[Index])
                     {
                         case Direction.Up: P.Y++; break;
                         case Direction.Down: P.Y--; break;
@@ -181,8 +120,8 @@ namespace DualSnakeServer
             }
             Players.First().Snake.Reverse();
             Players.Last().Snake.Reverse();
-            Players.First().CurrentDirection = StartDirections[0];
-            Players.Last().CurrentDirection = StartDirections[1];
+            Players.First().CurrentDirection = Map.StartDirection[0];
+            Players.Last().CurrentDirection = Map.StartDirection[1];
         }
 
         void Clock_Elapsed(object sender, ElapsedEventArgs e)
@@ -305,9 +244,9 @@ namespace DualSnakeServer
             {
                 if ((Player.Snake[i].X == NewHead.X) && (Player.Snake[i].Y == NewHead.Y)) { Fail = true; }
             }
-            for (int i = 0; i < Wall.Count; i++)
+            for (int i = 0; i < Map.Walls.Count; i++)
             {
-                if ((Wall[i].X == NewHead.X) && (Wall[i].Y == NewHead.Y)) { Fail = true; }
+                if ((Map.Walls[i].X == NewHead.X) && (Map.Walls[i].Y == NewHead.Y)) { Fail = true; }
             }
             if (Fail) { throw new InvalidOperationException(); }
 
@@ -351,7 +290,7 @@ namespace DualSnakeServer
 
         protected void SendStatus()
         {
-            string Status = "#Status " + GetRepresentation(Wall) + "\t" + GetRepresentation(Food) + "\t" + GetRepresentation(Turbo) + "\t" + GetRepresentation(Players.First().Snake) + "\t" + GetRepresentation(Players.Last().Snake);
+            string Status = "#Status " + GetRepresentation(Map.Walls) + "\t" + GetRepresentation(Food) + "\t" + GetRepresentation(Turbo) + "\t" + GetRepresentation(Players.First().Snake) + "\t" + GetRepresentation(Players.Last().Snake);
             try
             {
                 Players.First().Send(Status + "\t" + (Players.First().TurboEnabled ? "E" : "D") + "\t" + Players.First().Turbo.ToString());
@@ -429,7 +368,7 @@ namespace DualSnakeServer
                 Y = Tools.Random.Next(2, FieldHeight);
                 if (Food.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Turbo.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
-                if (Wall.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
+                if (Map.Walls.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Players.First().Snake.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 if (Players.Last().Snake.Any(new Func<Point, bool>(delegate(Point c) { return c.X == X && c.Y == Y; }))) { continue; }
                 return new Point(X, Y);
@@ -516,7 +455,30 @@ namespace DualSnakeServer
     {
         public static Random Random = new Random();
 
-        public static string CreateDefaultLevel(int Width, int Height)
+        public static Direction ParseDirection(string Input)
+        {
+            switch (Input.ToLower())
+            {
+                case "up": return Direction.Up;
+                case "down": return Direction.Down;
+                case "left": return Direction.Left;
+                case "right": return Direction.Right;
+            }
+            throw new ArgumentException();
+        }
+
+        public static Point ModPoint(Point p, int FieldWidth, int FieldHeight)
+        {
+            Point q = new Point(0, 0);
+            q.X = p.X; q.Y = p.Y;
+            if (q.X < 1) { q.X = q.X % FieldWidth + FieldWidth; }
+            if (q.X > FieldWidth) { q.X %= FieldWidth; }
+            if (q.Y < 1) { q.Y = q.Y % FieldHeight + FieldHeight; }
+            if (q.Y > FieldHeight) { q.Y %= FieldHeight; }
+            return q;
+        }
+
+        public static SnakeMap CreateDefaultMap(int Width, int Height)
         {
             string BlankLevel = "Blank level | 8 | Right | Left\n";
             for (int i = 0; i < Height; i++)
@@ -528,19 +490,7 @@ namespace DualSnakeServer
                 }
                 BlankLevel += "\n";
             }
-            return BlankLevel;
-        }
-
-        public static Direction ParseDirection(string Input)
-        {
-            switch (Input.ToLower())
-            {
-                case "up": return Direction.Up;
-                case "down": return Direction.Down;
-                case "left": return Direction.Left;
-                case "right": return Direction.Right;
-            }
-            throw new ArgumentException();
+            return SnakeMap.Parse(BlankLevel, Width, Height);
         }
     }
 
@@ -564,6 +514,77 @@ namespace DualSnakeServer
         public override string ToString()
         {
             return X.ToString() + "," + Y.ToString();
+        }
+    }
+
+    public class SnakeMap
+    {
+        public int StartLength;
+        public List<Point> Walls = new List<Point>();
+        public Point[] StartLocation = new Point[2];
+        public Direction[] StartDirection = new Direction[2];
+
+        public SnakeMap() { throw new InvalidOperationException("Use SnakeMap.Parse instead."); }
+        private SnakeMap(bool PrivateAccess) { }
+
+        static public SnakeMap Parse(string Level, int FieldWidth, int FieldHeight)
+        {
+            SnakeMap Map = new SnakeMap(true);
+            string[] Rows = Level.Split('\n').Select(new Func<string, string>(delegate(string start) { return start.TrimEnd(new char[] { '\r' }); })).Where(new Func<string, bool>(delegate(string w) { return w != ""; })).ToArray();
+
+            string[] Info = Rows[0].Split('|').Select(new Func<string, string>(delegate(string start) { return start.Trim(); })).ToArray();
+            Map.StartLength = int.Parse(Info[1]);
+            Map.StartDirection[0] = Tools.ParseDirection(Info[2]);
+            Map.StartDirection[1] = Tools.ParseDirection(Info[3]);
+
+            if (Rows.Length != FieldHeight + 1) { throw new ArgumentException(); }
+
+            for (int Row = 1; Row < Rows.Length; Row++)
+            {
+                for (int j = 0; j < FieldWidth; j++)
+                {
+                    int Column = j + 1;
+                    if (Rows[Row][j] == '%') { Map.Walls.Add(new Point(Column, Row)); }
+                }
+            }
+
+            int Count = 0;
+            for (int Row = 1; Row < Rows.Length; Row++)
+            {
+                for (int j = 0; j < FieldWidth; j++)
+                {
+                    int Column = j + 1;
+                    if (new char[] { '1', '2' }.Contains(Rows[Row][j]))
+                    {
+                        Count++;
+                        if (Count > 2) { throw new ArgumentException(); }
+                        int Index = Rows[Row][j] == '1' ? 0 : 1;
+                        if (Map.StartLocation[Index] != null) { throw new ArgumentException(); }
+                        for (int i = 0; i < Map.StartLength; i++)
+                        {
+                            Point MP;
+                            switch (Map.StartDirection[Index])
+                            {
+                                case Direction.Up: MP = new Point(Column, Row + i); break;
+                                case Direction.Down: MP = new Point(Column, Row - i); break;
+                                case Direction.Left: MP = new Point(Column + i, Row); break;
+                                case Direction.Right: MP = new Point(Column - i, Row); break;
+                                default: throw new ArgumentException();
+                            }
+                            MP = Tools.ModPoint(MP, FieldWidth, FieldHeight);
+                            if (Map.Walls.Any(new Func<Point, bool>(delegate(Point p) { return p.X == MP.X && p.Y == MP.Y; })) || (Count > 1 ? Map.StartLocation[1 - Index].Equals(MP) : false))
+                            {
+                                throw new ArgumentException();
+                            }
+                        }
+                        Map.StartLocation[Index] = new Point(Column, Row);
+                    }
+                }
+            }
+
+            if (Map.StartLocation[0] == null || Map.StartLocation[1] == null) { throw new ArgumentException(); }
+
+            return Map;
         }
     }
 }

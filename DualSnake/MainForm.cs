@@ -9,6 +9,7 @@ using Solymosi.Networking.Sockets;
 using Microsoft.Win32;
 using System.Net.Sockets;
 using DualSnake.Properties;
+using System.Threading;
 
 namespace DualSnake
 {
@@ -144,7 +145,14 @@ namespace DualSnake
 
             if (e.Text.StartsWith("#Countdown "))
             {
-                SetStatus("Starting game...", WarningColor);
+                ThreadPool.QueueUserWorkItem(new WaitCallback(delegate
+                {
+                    for (int i = 0; i < int.Parse(e.Text.Substring(11)); i++)
+                    {
+                        SetStatus("Get ready: " + (3 - i).ToString(), WarningColor);
+                        Thread.Sleep(1000);
+                    }
+                }));
             }
 
             if (e.Text == "#Draw")

@@ -235,6 +235,8 @@ namespace DualSnake
                 GFX.FillRectangle(Both ? new TextureBrush(Resources.Both) : (Me == 2 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them)), new Rectangle(BlockSize * (SnakeTwo[i].X - 1), BlockSize * (SnakeTwo[i].Y - 1), BlockSize, BlockSize));
             }
 
+            GFX.FillRectangle(new SolidBrush(Color.FromArgb(37, 37, 37)), new Rectangle(0, FieldHeight * BlockSize, this.Width, 60));
+            GFX.DrawLine(Pens.Black, new PointF(0, FieldHeight * BlockSize), new PointF(this.Width, FieldHeight * BlockSize));
             GFX.DrawImage(Resources.TurboIcon, new PointF(15, FieldHeight * BlockSize + 15));
             GFX.DrawRectangle(new Pen(Color.FromArgb(170, 106, 0)), new Rectangle(55, FieldHeight * BlockSize + 19, 201, 21));
             GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(56, FieldHeight * BlockSize + 20, 200, 20));

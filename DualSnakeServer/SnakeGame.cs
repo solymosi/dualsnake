@@ -15,7 +15,7 @@ namespace DualSnakeServer
         public const int InitialTurbo = 3;
         public const int TurboAmount = 20;
         public const int MaxTurbo = 100;
-        public const int InitialDelay = 2;
+        public const int InitialDelay = 1;
         public const int DelayAmount = 50;
         public const int FieldWidth = 70;
         public const int FieldHeight = 40;

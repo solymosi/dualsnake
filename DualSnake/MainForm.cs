@@ -82,7 +82,7 @@ namespace DualSnake
             });
             Server.Closed += new Client.CloseDelegate(delegate(object o, Client.CloseEventArgs ea)
             {
-                if (ea.Type == Client.CloseType.Dropped && !GameOver) { SetStatus("Connection failed", ErrorColor); }
+                if (!GameOver) { SetStatus("Connection failed", ErrorColor); }
                 this.Invoke((MethodInvoker)delegate { AgainPanel.Visible = true; AgainButton.Enabled = true; });
             });
         }
@@ -222,10 +222,10 @@ namespace DualSnake
                 GFX.FillRectangle(Both ? new TextureBrush(Resources.Both) : (Me == 2 ? new TextureBrush(Resources.Me) : new TextureBrush(Resources.Them)), new Rectangle(BlockDisplaySize * (SnakeTwo[i].X - 1), BlockDisplaySize * (SnakeTwo[i].Y - 1), BlockDisplaySize, BlockDisplaySize));
             }
 
-            GFX.DrawImage(Resources.TurboIcon, new PointF(15, BlockHeight * BlockDisplaySize + 3));
-            GFX.DrawRectangle(new Pen(Color.FromArgb(170, 106, 0)), new Rectangle(50, BlockHeight * BlockDisplaySize + 8, 201, 21));
-            GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(51, BlockHeight * BlockDisplaySize + 9, 200, 20));
-            GFX.DrawImageUnscaledAndClipped(Resources.PowerMeter, new Rectangle(51, BlockHeight * BlockDisplaySize + 9, TurboCounter * 2, 20));
+            GFX.DrawImage(Resources.TurboIcon, new PointF(15, BlockHeight * BlockDisplaySize + 15));
+            GFX.DrawRectangle(new Pen(Color.FromArgb(170, 106, 0)), new Rectangle(55, BlockHeight * BlockDisplaySize + 19, 201, 21));
+            GFX.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), new Rectangle(56, BlockHeight * BlockDisplaySize + 20, 200, 20));
+            GFX.DrawImageUnscaledAndClipped(Resources.PowerMeter, new Rectangle(56, BlockHeight * BlockDisplaySize + 20, TurboCounter * 2, 20));
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)

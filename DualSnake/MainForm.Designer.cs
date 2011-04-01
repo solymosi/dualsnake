@@ -41,7 +41,7 @@
             this.StatusLabel.Font = new System.Drawing.Font("Trebuchet MS", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.StatusLabel.Location = new System.Drawing.Point(0, 231);
             this.StatusLabel.Name = "StatusLabel";
-            this.StatusLabel.Size = new System.Drawing.Size(546, 86);
+            this.StatusLabel.Size = new System.Drawing.Size(546, 76);
             this.StatusLabel.TabIndex = 1;
             this.StatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 

@@ -34,9 +34,9 @@ namespace DualSnake
         const int BlockHeight = 40;
         const int BlockDisplaySize = 10;
 
-        Color ErrorColor = Color.Maroon;
-        Color WarningColor = Color.FromArgb(128, 64, 0);
-        Color SuccessColor = Color.Green;
+        Color ErrorColor = Color.FromArgb(150, 128, 0, 0);
+        Color WarningColor = Color.FromArgb(150, 128, 64, 0);
+        Color SuccessColor = Color.FromArgb(150, 0, 128, 0);
 
         bool Draw = false;
         

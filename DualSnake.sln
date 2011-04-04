@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DualSnakeServer", "DualSnakeServer\DualSnakeServer.csproj", "{20D23E4F-E898-4C1E-831B-1304FF441319}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DualSnake", "DualSnake\DualSnake.csproj", "{AA91C0E5-0A39-4D08-9B38-D864B0B0A948}"

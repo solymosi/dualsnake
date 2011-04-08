@@ -5,11 +5,11 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using Solymosi.Networking.Sockets;
-using Microsoft.Win32;
 using System.Net.Sockets;
-using DualSnake.Properties;
 using System.Threading;
+using Microsoft.Win32;
+using Solymosi.Networking.Sockets;
+using DualSnake.Properties;
 
 namespace DualSnake
 {
@@ -50,6 +50,13 @@ namespace DualSnake
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            SetupWindow();
+            ConnectTo = (string)Registry.GetValue(@"HKEY_CURRENT_USER\Software\Solymosi\DualSnake", "LastIP", "");
+            PopupConnectionDialog();
+        }
+
+        private void SetupWindow()
+        {
             this.ClientSize = new Size(FieldWidth * BlockSize, FieldHeight * BlockSize + 60);
             this.Left = Screen.PrimaryScreen.WorkingArea.Width / 2 - this.Width / 2;
             this.Top = Screen.PrimaryScreen.WorkingArea.Height / 2 - this.Height / 2;
@@ -63,8 +70,6 @@ namespace DualSnake
             StatusLabel.Left = 0;
             StatusLabel.Width = this.Width;
             StatusLabel.Top = FieldHeight * BlockSize / 2 - StatusLabel.Height / 2;
-            ConnectTo = (string)Registry.GetValue(@"HKEY_CURRENT_USER\Software\Solymosi\DualSnake", "LastIP", "");
-            PopupConnectionDialog();
         }
 
         private void Connect()
